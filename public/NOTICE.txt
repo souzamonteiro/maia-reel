@@ -1,0 +1,21 @@
+Maia Reel
+Copyright 2026 Roberto Luiz Souza Monteiro and contributors.
+Original application code is provided under Apache License 2.0.
+
+Reference designs were inspected in Roberto Luiz Souza Monteiro's Maia projects.
+No source from those applications or their compiled WASM binaries was copied.
+See docs/SOURCE_INVENTORY.md for exact revisions and paths.
+
+Runtime packages:
+- @ffmpeg/ffmpeg 0.12.15 — MIT — ffmpeg.wasm contributors.
+- @ffmpeg/types 0.12.4 — MIT — ffmpeg.wasm contributors.
+- @ffmpeg/core 0.12.10 — GPL-2.0-or-later, as declared by the package.
+  Upstream: https://github.com/ffmpegwasm/ffmpeg.wasm
+  FFmpeg: https://ffmpeg.org/
+  This core is a separate generated/deployed dependency, not Apache-licensed
+  Maia source. Preserve upstream licenses and corresponding-source/build
+  materials when distributing it. Do not describe the entire deployed bundle
+  as exclusively Apache-2.0. Review the core's included codec libraries too.
+
+Development-only dependencies and exact transitive versions are recorded in
+package-lock.json. Their package license metadata remains in node_modules.

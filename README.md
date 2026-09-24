@@ -1,6 +1,6 @@
 # Maia Reel
 
-A local-first, browser-based video editor for the Maia Platform ecosystem. Edit video, audio, still images, titles and captions on a single non-destructive timeline, then export a finished file. **Status: architecture and implementation plan; the editor has not yet been implemented.**
+A local-first, browser-based video editor for the Maia Platform ecosystem. Edit video, audio, still images, titles and captions on a single non-destructive timeline, then export a finished file. **Status: working MVP implementation with Chrome browser acceptance tests. Optional Maia integrations and the full release/browser matrix remain pending.**
 
 ## Product promise
 
@@ -44,8 +44,19 @@ docs/                       architecture, inventory, roadmap, agent instructions
 
 ## Start here
 
-Read `docs/SOURCE_INVENTORY.md`, `docs/ARCHITECTURE.md`, `docs/PROJECT_FORMAT.md`, `docs/ROADMAP.md` and `AGENTS.md` in that order. Phase 0 audits the existing Maia repositories; implementation starts only after inventory evidence is recorded. `docs/GEMINI_PROMPT.md` is the initial instruction to paste into Gemini. Commands below become active once the first implementation phase creates the Vite workspace: `npm install`, `npm run dev`, `npm test`, `npm run build`.
+Read `docs/SOURCE_INVENTORY.md`, `docs/ARCHITECTURE.md`, `docs/PROJECT_FORMAT.md`, `docs/ROADMAP.md` and `AGENTS.md` in that order. Phase 0 audits the existing Maia repositories; implementation starts only after inventory evidence is recorded. `docs/GEMINI_PROMPT.md` is the initial instruction to paste into Gemini. The workspace is implemented. Run `npm ci`, then `npm run dev` and open http://127.0.0.1:5173. Use `npm test` and `npm run build` for checks. See [deployment and test instructions](docs/DEPLOYMENT.md) and [verification evidence](docs/VERIFICATION.md).
 
 ## License
 
 Apache License 2.0; see `LICENSE`. Keep license notices and attribution for imported source or third-party packages. Verify compatibility and asset/model licenses before incorporation. Copyright 2026 Roberto Luiz Souza Monteiro and contributors.
+
+## Using the editor
+
+1. Import local videos/audio/images and click **Adicionar** on each asset. Videos/images append to the visual lane; audio appends to its independent lane.
+2. Select a timeline clip. **Aplicar corte** changes source in/out; **Mover** changes timeline position; **Aplicar ganho** changes its sound. Video overlaps in one lane are rejected. Dragging snaps near neighboring edges.
+3. Scrub to a point inside the selected clip and choose **Dividir na posição**. Undo/redo restore complete project snapshots. Track **Silenciar** controls embedded video audio or the music lane.
+4. Add a title with start/end times. Generate thumbnails/waveforms on demand in the library. Play or scrub the preview.
+5. Save the project JSON. After reopening, select **Revincular mídias offline** and choose the original files; confirm matches by name, size, modification time, kind and duration. JSON contains editing decisions only.
+6. **Verificar motor** probes installed encoders and filters. Export MP4 (H.264/AAC) or WebM (VP8/Vorbis) only when the corresponding pair is confirmed. **Cancelar** terminates the worker. Reimport the output to review.
+
+The current UI is in Brazilian Portuguese. Output defaults to 1280×720 / 30 fps; validated projects may specify other even dimensions up to 3840×2160. Still images have a five-second source interval. No transitions, speed changes, RNNoise, chroma key, recording or subtitle generation are included yet.

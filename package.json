@@ -1,0 +1,30 @@
+{
+  "name": "maia-reel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "lint": "tsc --noEmit && prettier --check apps packages tests scripts/*.mjs *.json *.ts index.html",
+    "test": "tsx --test tests/*.test.ts",
+    "test:browser": "node tests/browser.mjs && node tests/edge-cases.mjs",
+    "fixtures": "bash scripts/fixtures.sh",
+    "prepare:engine": "node scripts/prepare-engine.mjs",
+    "postinstall": "npm run prepare:engine",
+    "format": "prettier --write apps packages tests scripts/*.mjs *.json *.ts index.html"
+  },
+  "dependencies": {
+    "@ffmpeg/core": "0.12.10",
+    "@ffmpeg/ffmpeg": "0.12.15"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "22.18.12",
+    "prettier": "3.6.2",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vite": "6.4.3"
+  }
+}

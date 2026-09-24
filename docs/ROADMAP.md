@@ -21,3 +21,13 @@ Add audited adapters for chroma key, audio conversion and optional RNNoise. Add 
 Cancellation, large-media diagnostics, worker recovery, keyboard/a11y review, browser matrix and Maia Edge Nginx deploy instructions. Benchmark representative 1080p fixtures and document export memory/time. Gate: reproducible build, notice file, no undisclosed external request, known limitations documented.
 
 Every phase is a separate reviewable PR or small commit series. No feature is complete until a user-visible path and exported result are checked.
+
+## Implementation checkpoint — 2026-09-24
+
+- Phase 0: local source inventory, workspace, strict validation, fixtures, capability probe and license notices implemented. Original demo runtime checks/public catalog re-enumeration remain open.
+- Phase 1: import/trim/preview/save/reload/relink and actual MP4 output/reimport covered by browser acceptance.
+- Phase 2: two video clips, split/move/snapping, audio tracks/gain/mute, undo/redo, titles and on-demand thumbnails/waveforms implemented. Automated picture/audio/title output checks pass. See VERIFICATION for the limits of synchronization evidence.
+- Phase 3: optional Maia adapters remain pending; no unsupported integration is advertised.
+- Phase 4: cancellation/recovery, memory diagnostics, native accessible controls, no-external-request check and Nginx instructions implemented. Browser matrix, peak-memory/1080p benchmarks and release distribution review remain open.
+
+Next smallest release task: test representative VFR and rotated phone footage and measure preview/export sync, then benchmark a short 1080p project before widening the browser support claim.

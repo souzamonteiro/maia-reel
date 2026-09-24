@@ -10,3 +10,7 @@ coverage/
 *.wasm
 .env*
 !.env.example
+
+public/ffmpeg/
+test-results/
+examples/generated/

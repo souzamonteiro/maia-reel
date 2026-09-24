@@ -1,0 +1,410 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #e8ebf4;
+  background: #10131c;
+  font-synthesis: none;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+select {
+  border: 1px solid #394052;
+  border-radius: 7px;
+  background: #262d3d;
+  color: #eef1fa;
+  padding: 9px 13px;
+  cursor: pointer;
+}
+button:hover {
+  background: #364056;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #a49cff;
+  outline-offset: 3px;
+}
+.primary {
+  background: #8470ed;
+  border-color: #9987fc;
+  color: white;
+}
+.primary:hover {
+  background: #9883ff;
+}
+header {
+  min-height: 78px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 28px;
+  border-bottom: 1px solid #303647;
+}
+.brand {
+  color: #e6e1ff;
+  text-decoration: none;
+  font-size: 23px;
+  white-space: nowrap;
+}
+.badge {
+  font-size: 10px;
+  color: #bcb2fa;
+  letter-spacing: 1.3px;
+  padding: 7px;
+  border: 1px solid #443b62;
+  border-radius: 5px;
+}
+.project-name {
+  margin-right: auto;
+  color: #a5aec5;
+}
+.project-name span {
+  color: #c6b8ff;
+}
+main {
+  display: grid;
+  grid-template-columns: 260px minmax(300px, 1fr) 270px;
+  gap: 1px;
+  background: #303647;
+}
+main > section,
+main > aside {
+  background: #171c28;
+  padding: 22px;
+}
+h1,
+h2 {
+  font-size: 15px;
+  margin: 0 0 16px;
+  font-weight: 600;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.section-head span {
+  font-size: 11px;
+  color: #aab3c9;
+}
+.section-head h1,
+.section-head h2 {
+  margin: 0;
+}
+.muted,
+.hint {
+  color: #a3adc3;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.hint {
+  font-size: 11px;
+  margin-top: 20px;
+}
+.wide {
+  width: 100%;
+  margin: 6px 0;
+}
+.assets {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+  max-height: 450px;
+  overflow: auto;
+}
+.asset {
+  padding: 14px;
+  border: 1px solid #394052;
+  border-radius: 8px;
+  background: #202636;
+  display: grid;
+  gap: 9px;
+}
+.asset strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.asset small {
+  font-size: 11px;
+  color: #aab3c9;
+}
+.asset button {
+  font-size: 11px;
+}
+.canvas-wrap {
+  aspect-ratio: 16/9;
+  background: #090b10;
+  margin-top: 20px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 12px 35px #0004;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 15px 0;
+}
+.transport .muted {
+  margin-left: auto;
+}
+output {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.scrub-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+input[type="range"] {
+  flex: 1;
+  accent-color: #ac99ff;
+}
+form label {
+  display: grid;
+  gap: 6px;
+  font-size: 11px;
+  color: #b8c1d6;
+  margin-bottom: 12px;
+}
+input[type="number"],
+textarea {
+  width: 100%;
+  border: 1px solid #3c455c;
+  border-radius: 5px;
+  background: #111723;
+  color: #eee;
+  padding: 8px;
+}
+form button {
+  font-size: 11px;
+  margin-bottom: 7px;
+}
+hr {
+  border: 0;
+  border-top: 1px solid #343d51;
+  margin: 20px 0;
+}
+.pair {
+  display: flex;
+  gap: 12px;
+}
+.pair > * {
+  min-width: 0;
+  flex: 1;
+}
+#clipName {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+#titles button {
+  font-size: 11px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  margin-top: 8px;
+}
+.timeline {
+  grid-column: 1/-1;
+  min-height: 225px;
+}
+.inline {
+  font-size: 12px;
+  margin-left: 16px;
+}
+.track {
+  display: flex;
+  margin-top: 15px;
+  min-height: 60px;
+  gap: 15px;
+}
+.track-name {
+  width: 105px;
+  flex-shrink: 0;
+  font-size: 10px;
+  letter-spacing: 1px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+}
+.track-name button {
+  font-size: 10px;
+  padding: 5px;
+}
+.lane {
+  position: relative;
+  flex: 1;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #ffffff05 0,
+      #ffffff05 1px,
+      transparent 1px,
+      transparent 10%
+    ),
+    #101622;
+  border-radius: 5px;
+  min-height: 60px;
+}
+.clip {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  min-width: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 5px;
+  font-size: 11px;
+  text-align: left;
+  padding: 8px;
+}
+.clip.video {
+  background: #514875;
+  border-color: #8c7cbd;
+}
+.clip.audio {
+  background: #244f52;
+  border-color: #428489;
+}
+.clip.selected {
+  outline: 2px solid #ddd4ff;
+  outline-offset: 1px;
+}
+.export-panel {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.export-panel > div {
+  margin-right: auto;
+}
+.export-panel h2 {
+  margin-bottom: 4px;
+}
+.export-panel p {
+  margin: 0;
+}
+.capabilities {
+  grid-column: 1/-1;
+  background: #171c28;
+  padding: 15px 24px;
+  font-size: 12px;
+  color: #aab4cb;
+}
+#status {
+  grid-column: 1/-1;
+  padding: 14px 24px;
+  background: #232b3d;
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+footer {
+  padding: 20px 28px;
+  color: #8e9bb7;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  display: flex;
+  justify-content: space-between;
+}
+footer span {
+  letter-spacing: 0;
+}
+[hidden] {
+  display: none !important;
+}
+@media (max-width: 1050px) {
+  main {
+    grid-template-columns: 220px 1fr;
+  }
+  .inspector {
+    grid-column: 1/-1;
+    display: block;
+  }
+  .inspector form {
+    max-width: 500px;
+  }
+  .badge {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  header {
+    flex-wrap: wrap;
+    padding: 15px;
+  }
+  .project-name {
+    display: none;
+  }
+  main {
+    display: flex;
+    flex-direction: column;
+  }
+  main > section,
+  main > aside {
+    padding: 16px;
+  }
+  .export-panel {
+    flex-wrap: wrap;
+  }
+  .transport .muted {
+    display: none;
+  }
+  .section-head {
+    flex-wrap: wrap;
+  }
+  .timeline {
+    overflow: auto;
+  }
+  .track {
+    min-width: 520px;
+  }
+  footer span {
+    display: none;
+  }
+}
+
+.asset-visual {
+  width: 100%;
+  max-height: 90px;
+  object-fit: contain;
+  background: #101622;
+  border-radius: 4px;
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #f0c799;
+  z-index: 2;
+  pointer-events: none;
+}
