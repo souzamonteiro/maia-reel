@@ -1,0 +1,9 @@
+# First message for Gemini
+
+You are implementing **Maia Reel** from this repository, an Apache-2.0 browser video editor for Maia Platform. Read `README.md`, `AGENTS.md` and every file in `docs/` before editing. Treat these documents as requirements; the public site lists candidate tools but does not prove reusable APIs.
+
+Begin with Phase 0 from `docs/ROADMAP.md`. Inspect the existing Maia repositories linked from https://www.maiaplatform.org/ and the source inventory. Fill in exact URLs, commit hashes, licenses, relevant source paths and observed runtime behavior. Determine whether the available FFmpeg WASM build can actually encode the MVP's video and audio formats. Do not copy code before reviewing licensing and behavior.
+
+Then implement the smallest working Phase 1 vertical slice. Create a Vite/TypeScript workspace and commands in `package.json`; implement validated project v1 schema and local media import; preview one video; trim via a timeline command; save and reopen project with relink; export and reimport a short video with audio. Probe encoding support instead of promising MP4 universally. Use microsecond integer project times, pure command operations and one project model. Include only meaningful tests for project validation and trim/serialization, and manually verify the browser/export journey. Record decisions in `docs/DECISIONS.md`.
+
+At the end of each session provide: (1) exact files changed; (2) commands executed and their results; (3) working browser behavior; (4) exported media verification; (5) remaining limitations; (6) next smallest task. Do not skip a gate to build cosmetic features. If you cannot access a repository or run a browser, report the specific gap and continue with the independently testable work. Ask Roberto only for a missing decision that blocks implementation.

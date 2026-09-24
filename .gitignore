@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+*.mp4
+*.mov
+*.wav
+*.webm
+*.wasm
+.env*
+!.env.example
