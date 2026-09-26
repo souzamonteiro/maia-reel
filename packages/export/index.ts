@@ -8,6 +8,7 @@ export class Exporter {
   private engine?: FFmpeg;
   private logs: string[] = [];
   private loading?: Promise<void>;
+  private filterList = "";
   formats: Format[] = [];
   busy = false;
   onStatus: (s: string) => void = () => {};
@@ -63,6 +64,7 @@ export class Exporter {
       this.logs = [];
       await ff.exec(["-filters"]);
       const filters = this.logs.join("\n");
+      this.filterList = filters;
       for (const required of [
         "overlay",
         "trim",
@@ -116,6 +118,11 @@ export class Exporter {
       await this.load();
       if (!this.formats.includes(format))
         throw Error(`Encoders para ${format} indisponíveis.`);
+      if (
+        plan.segments.some((s) => s.clip.chromaKey) &&
+        !/\bchromakey\b/.test(this.filterList)
+      )
+        throw Error("Filtro necessário indisponível: chromakey");
       const ff = this.engine!;
       const args: string[] = [];
       const inputMap = new Map<string, number>();
@@ -160,8 +167,14 @@ export class Exporter {
         const n = serial++;
         const d = seconds(c.sourceOutUs - c.sourceInUs);
         if (track.kind === "video") {
+          const k = c.chromaKey;
+          // Keyed clips keep alpha, including transparent letterbox bars, like the preview.
+          const key = k
+            ? `,format=yuva420p,chromakey=color=0x${k.color.slice(1)}:similarity=${k.similarity}:blend=${k.blend}`
+            : "";
+          const padColor = k ? ":color=black@0" : "";
           filters.push(
-            `[${idx}:v]trim=start=${seconds(c.sourceInUs)}:end=${seconds(c.sourceOutUs)},setpts=PTS-STARTPTS,scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=${fps},setpts=PTS+${seconds(c.startUs)}/TB[v${n}]`,
+            `[${idx}:v]trim=start=${seconds(c.sourceInUs)}:end=${seconds(c.sourceOutUs)},setpts=PTS-STARTPTS,scale=${w}:${h}:force_original_aspect_ratio=decrease${key},pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2${padColor},setsar=1,fps=${fps},setpts=PTS+${seconds(c.startUs)}/TB[v${n}]`,
           );
           filters.push(
             `[${current}][v${n}]overlay=eof_action=pass:enable='gte(t,${seconds(c.startUs)})*lt(t,${seconds(endUs)})'[layer${n}]`,

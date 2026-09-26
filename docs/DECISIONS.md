@@ -22,3 +22,5 @@ Related upstream reports: [Opus trap #591](https://github.com/ffmpegwasm/ffmpeg.
 | 2026-09-24 | Relative Vite asset base and FFmpeg URLs under document base | Maia Edge serves apps under /maia-reel/ | Static Nginx deployment; no Node service or new port. |
 
 - Internationalization uses a local TypeScript message catalog (English, Portuguese, Spanish) and explicit text/attribute bindings. The initial interface is bound before user content is rendered; subsequent messages register their source text. Language changes update bindings without rebuilding the editor or modifying project/history state. Preference is stored independently in `maiaReelLanguage`, with browser-language detection and English fallback. No translation service or new dependency is required.
+
+- Chroma key is an optional per-clip `chromaKey` on video tracks, exported with FFmpeg `chromakey` (yuva420p, transparent letterbox) and previewed with the same UV-distance formula per pixel (FFmpeg averages 3×3, so edges may differ slightly). Keyed clips reveal lower video tracks; a "+ Video track" button provides the background layer.

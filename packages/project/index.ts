@@ -6,6 +6,11 @@ export type Asset = {
   lastModifiedMs: number;
   durationUs: number;
 };
+export type ChromaKey = {
+  color: string; // #rrggbb
+  similarity: number; // 0.01–1, FFmpeg chromakey semantics
+  blend: number; // 0–1
+};
 export type Clip = {
   id: string;
   assetId: string;
@@ -13,6 +18,7 @@ export type Clip = {
   sourceInUs: number;
   sourceOutUs: number;
   gain: number;
+  chromaKey?: ChromaKey;
 };
 export type Track = {
   id: string;
@@ -197,6 +203,23 @@ export function validate(value: unknown): Project {
           c.gain <= 2,
         "Ganho deve estar entre 0 e 2.",
       );
+      if (c.chromaKey !== undefined) {
+        const k = c.chromaKey;
+        check(
+          t.kind === "video" &&
+            k &&
+            typeof k === "object" &&
+            typeof k.color === "string" &&
+            /^#[0-9a-f]{6}$/i.test(k.color) &&
+            typeof k.similarity === "number" &&
+            k.similarity >= 0.01 &&
+            k.similarity <= 1 &&
+            typeof k.blend === "number" &&
+            k.blend >= 0 &&
+            k.blend <= 1,
+          "Chroma key inválido.",
+        );
+      }
     }
     if (t.kind === "video") {
       const clips = [...t.clips].sort((a, b) => a.startUs - b.startUs);
@@ -231,7 +254,8 @@ export function validate(value: unknown): Project {
     );
     if (t.style.fontFamily !== undefined)
       check(
-        typeof t.style.fontFamily === "string" && t.style.fontFamily.length <= 80,
+        typeof t.style.fontFamily === "string" &&
+          t.style.fontFamily.length <= 80,
         "Estilo inválido.",
       );
     if (t.style.fontWeight !== undefined)
@@ -252,8 +276,13 @@ export function validate(value: unknown): Project {
     if (t.style.position !== undefined)
       check(
         [
-          "center", "top", "bottom",
-          "top-left", "top-right", "bottom-left", "bottom-right",
+          "center",
+          "top",
+          "bottom",
+          "top-left",
+          "top-right",
+          "bottom-left",
+          "bottom-right",
         ].includes(t.style.position),
         "Estilo inválido.",
       );

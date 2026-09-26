@@ -4,6 +4,7 @@ import {
   type Project,
   type Asset,
   type Clip,
+  type ChromaKey,
   type Title,
   type Track,
 } from "../project";
@@ -12,10 +13,18 @@ export type Command =
   | { type: "addTrack"; track: Track }
   | { type: "insertClip"; trackId: string; clip: Clip }
   | { type: "moveClip"; id: string; startUs: number }
-  | { type: "trimClip"; id: string; sourceInUs: number; sourceOutUs: number }
+  | {
+      type: "trimClip";
+      id: string;
+      sourceInUs: number;
+      sourceOutUs: number;
+      startUs?: number;
+    }
   | { type: "splitClip"; id: string; atUs: number; newId?: string }
   | { type: "setGain"; id: string; gain: number }
+  | { type: "setChromaKey"; id: string; chromaKey?: ChromaKey }
   | { type: "mute"; trackId: string; muted: boolean }
+  | { type: "raiseTrack"; trackId: string; aboveId: string }
   | { type: "deleteClip"; id: string }
   | { type: "addTitle"; title: Title }
   | { type: "deleteTitle"; id: string };
@@ -26,7 +35,15 @@ export function command(project: Project, cmd: Command): Project {
   else if (cmd.type === "addTitle") p.titles.push(cmd.title);
   else if (cmd.type === "deleteTitle")
     p.titles = p.titles.filter((t) => t.id !== cmd.id);
-  else if (cmd.type === "insertClip" || cmd.type === "mute") {
+  else if (cmd.type === "raiseTrack") {
+    const up = p.tracks.find((t) => t.id === cmd.trackId);
+    const down = p.tracks.find((t) => t.id === cmd.aboveId);
+    if (!up || !down) throw Error("Faixa inexistente.");
+    const lo = Math.min(up.zIndex, down.zIndex);
+    const hi = Math.max(up.zIndex, down.zIndex, lo + 1);
+    up.zIndex = hi;
+    down.zIndex = lo;
+  } else if (cmd.type === "insertClip" || cmd.type === "mute") {
     const t = p.tracks.find((t) => t.id === cmd.trackId);
     if (!t) throw Error("Faixa inexistente.");
     if (cmd.type === "mute") t.muted = cmd.muted;
@@ -42,9 +59,14 @@ export function command(project: Project, cmd: Command): Project {
       case "trimClip":
         c.sourceInUs = cmd.sourceInUs;
         c.sourceOutUs = cmd.sourceOutUs;
+        if (cmd.startUs !== undefined) c.startUs = cmd.startUs;
         break;
       case "setGain":
         c.gain = cmd.gain;
+        break;
+      case "setChromaKey":
+        if (cmd.chromaKey) c.chromaKey = { ...cmd.chromaKey };
+        else delete c.chromaKey;
         break;
       case "deleteClip":
         t.clips = t.clips.filter((c) => c.id !== cmd.id);

@@ -8,6 +8,7 @@ import {
   type Project,
 } from "../packages/project";
 import { command, History, evaluate, snap } from "../packages/timeline";
+import { applyChromaKey } from "../packages/preview/chroma";
 function fixture(): Project {
   const p = newProject();
   p.assets.push({
@@ -89,6 +90,47 @@ test("trim and move are immutable and reject overlap without damaging history", 
   h.undo();
   h.execute({ type: "setGain", id: "clip", gain: 0.5 });
   assert.equal(h.canRedo, false);
+});
+test("chroma key is validated, undoable and survives split", () => {
+  const p = fixture();
+  const key = { color: "#00ff00", similarity: 0.15, blend: 0.1 };
+  const h = new History(p);
+  h.execute({ type: "setChromaKey", id: "clip", chromaKey: key });
+  assert.deepEqual(parseProject(JSON.stringify(h.project)), h.project);
+  h.execute({ type: "splitClip", id: "clip", atUs: 2e6, newId: "right" });
+  assert.deepEqual(h.project.tracks[0].clips[1].chromaKey, key);
+  h.undo();
+  h.execute({ type: "setChromaKey", id: "clip" });
+  assert.equal(h.project.tracks[0].clips[0].chromaKey, undefined);
+  for (const bad of [
+    { ...key, color: "green" },
+    { ...key, similarity: 0 },
+    { ...key, blend: 2 },
+  ])
+    assert.throws(() =>
+      command(p, { type: "setChromaKey", id: "clip", chromaKey: bad }),
+    );
+});
+test("raiseTrack reorders video layers used by evaluation", () => {
+  const p = fixture();
+  p.tracks.push({
+    id: "v2",
+    kind: "video",
+    zIndex: 2,
+    muted: false,
+    clips: [{ ...p.tracks[0].clips[0], id: "top" }],
+  });
+  const ids = (q: Project) => evaluate(q, 1e6).clips.map((x) => x.clip.id);
+  assert.deepEqual(ids(validate(p)), ["clip", "top"]);
+  const next = command(p, { type: "raiseTrack", trackId: "v1", aboveId: "v2" });
+  assert.deepEqual(ids(next), ["top", "clip"]);
+});
+test("chroma key alpha follows FFmpeg similarity and blend", () => {
+  const key = { color: "#00ff00", similarity: 0.1, blend: 0.1 };
+  const px = new Uint8ClampedArray([0, 255, 0, 255, 255, 255, 255, 255]);
+  applyChromaKey(px, key);
+  assert.equal(px[3], 0);
+  assert.equal(px[7], 255);
 });
 test("audio overlaps mix and track mute preserves source gain", () => {
   const p = fixture();

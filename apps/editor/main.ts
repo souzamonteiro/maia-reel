@@ -11,6 +11,7 @@ import {
   duration,
   uid,
   type Clip,
+  type Track,
   type TitleAlign,
   type TitlePosition,
 } from "../../packages/project";
@@ -25,10 +26,10 @@ $("app").innerHTML = `
 <header><a class="brand" href="/">◈ <strong>Maia Reel</strong></a><span class="badge">LOCAL · SEM UPLOAD</span><div class="project-name"><span id="projectName">Meu filme</span> <span id="dirty"></span></div><label>Idioma <select id="language" aria-label="Idioma"><option value="en">English</option><option value="pt">Português</option><option value="es">Español</option></select></label><button id="open">Abrir projeto</button><button id="save">Salvar projeto</button></header>
 <main><aside class="library"><div class="section-head"><h1>Mídia</h1><span id="assetCount">0 arquivos</span></div><p class="muted">Seu próximo filme começa aqui.</p><button class="primary wide" id="import">＋ Importar arquivos</button><input id="mediaInput" type="file" accept="video/*,audio/*,image/png,image/jpeg" multiple hidden><input id="projectInput" type="file" accept=".json" hidden><input id="relinkInput" type="file" multiple hidden><button id="relink" class="wide">Revincular mídias offline</button><div id="assets" class="assets"></div><p class="hint">Vídeos e imagens entram na faixa visual. Áudios têm uma faixa independente. Imagens duram 5 segundos.</p></aside>
 <section class="viewer"><div class="section-head"><h2>Prévia</h2><span id="resolution">1280 × 720 · 30 fps</span></div><div class="canvas-wrap"><canvas id="preview" width="1280" height="720" aria-label="Prévia do projeto"></canvas></div><div class="transport"><button id="rewind" aria-label="Voltar ao início">↤</button><button id="play">Reproduzir</button><output id="time">0.00 / 0.00 s</output><span class="muted">Prévia aproximada</span></div><label class="scrub-label">Posição <input id="scrub" type="range" min="0" max="0" step="1000" value="0"></label></section>
-<aside class="inspector"><h2>Clipe selecionado</h2><div id="emptySelection" class="muted">Selecione um clipe na linha do tempo para editar.</div><form id="clipForm" hidden><p id="clipName"></p><label>Posição na timeline (s)<input id="start" type="number" min="0" step="0.001" required></label><label>Entrada na fonte (s)<input id="in" type="number" min="0" step="0.001" required></label><label>Saída na fonte (s)<input id="out" type="number" min="0" step="0.001" required></label><label>Ganho (0–2)<input id="gain" type="number" min="0" max="2" step="0.05" required></label><button class="primary" type="submit">Aplicar corte</button><button type="button" id="move">Mover</button><button type="button" id="setGain">Aplicar ganho</button><button type="button" id="split">Dividir na posição</button><button type="button" id="delete">Excluir clipe</button></form><hr><h2>Título</h2><form id="titleForm"><label>Texto<textarea id="titleText" maxlength="300" rows="2" required placeholder="Uma história para contar"></textarea></label><div class="pair"><label>Início (s)<input id="titleStart" type="number" value="0" min="0" step="0.1" required></label><label>Fim (s)<input id="titleEnd" type="number" value="5" min="0" step="0.1" required></label></div><div class="pair"><button type="button" id="titleUseTime">Usar posição do cursor</button><label class="inline"><input type="checkbox" id="titleAutoSync" checked> Sincronizar ao cursor</label></div><label>Fonte<select id="titleFont"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Impact">Impact</option><option value="Verdana">Verdana</option><option value="Trebuchet MS">Trebuchet MS</option></select></label><label>Estilo de fonte<select id="titleStyle"><option value="">Normal</option><option value="bold">Negrito</option><option value="italic">Itálico</option><option value="bold italic">Negrito + Itálico</option></select></label><label>Posição do título<select id="titlePosition"><option value="bottom">Rodapé</option><option value="top">Topo</option><option value="center">Centro</option><option value="top-left">Topo esquerdo</option><option value="top-right">Topo direito</option><option value="bottom-left">Rodapé esquerdo</option><option value="bottom-right">Rodapé direito</option></select></label><label>Alinhamento<select id="titleAlign"><option value="center">Centro</option><option value="left">Esquerda</option><option value="right">Direita</option></select></label><button type="submit">＋ Adicionar título</button></form><div id="titles"></div></aside>
-<section class="timeline"><div class="section-head"><h2>Linha do tempo</h2><div><button id="addAudioTrack">＋ Faixa de áudio</button><button id="undo">Desfazer</button><button id="redo">Refazer</button><label class="inline"><input id="snapping" type="checkbox" checked> Ajustar às bordas</label></div></div><div id="tracks"></div><p class="hint">Clique para selecionar · arraste para mover · Espaço reproduz · Ctrl/⌘ Z desfaz</p></section>
+<aside class="inspector"><h2>Clipe selecionado</h2><div id="emptySelection" class="muted">Selecione um clipe na linha do tempo para editar.</div><form id="clipForm" hidden><p id="clipName"></p><label>Posição na timeline (s)<input id="start" type="number" min="0" step="0.001" required></label><div class="pair"><button type="button" id="moveHere">↤ Mover para aqui</button></div><label>Entrada na fonte (s)<input id="in" type="number" min="0" step="0.001" required></label><div class="pair"><button type="button" id="setIn">↤ Marcar entrada</button></div><label>Saída na fonte (s)<input id="out" type="number" min="0" step="0.001" required></label><div class="pair"><button type="button" id="setOut">↦ Marcar saída</button></div><label>Ganho (0–2)<input id="gain" type="number" min="0" max="2" step="0.05" required></label><div class="pair"><button class="primary" type="submit">Aplicar corte</button><button type="button" id="setGain">Aplicar ganho</button></div><div class="pair"><button type="button" id="move">Mover (posição acima)</button><button type="button" id="split">Dividir na posição</button></div><fieldset id="chromaFields" class="chroma"><legend>Chroma key</legend><label class="check"><input type="checkbox" id="chromaOn"> Ativar chroma key</label><div class="pair"><label>Cor de fundo<input id="chromaColor" type="color" value="#00ff00"></label></div><div class="pair"><button type="button" id="chromaDetect">Detectar cor</button><button type="button" id="chromaPick">Escolher na prévia</button></div><label>Similaridade<input id="chromaSimilarity" type="range" min="0.01" max="0.4" step="0.005" value="0.1"></label><label>Suavidade<input id="chromaBlend" type="range" min="0" max="0.3" step="0.005" value="0.05"></label><p class="hint">Coloque o clipe em uma faixa de vídeo acima do fundo.</p></fieldset><button type="button" id="delete">Excluir clipe</button></form><hr><h2>Título</h2><form id="titleForm"><label>Texto<textarea id="titleText" maxlength="300" rows="2" required placeholder="Uma história para contar"></textarea></label><div class="pair"><label>Início (s)<input id="titleStart" type="number" value="0" min="0" step="0.1" required></label><label>Fim (s)<input id="titleEnd" type="number" value="5" min="0" step="0.1" required></label></div><div class="pair"><button type="button" id="titleUseTime">Usar posição do cursor</button><label class="inline"><input type="checkbox" id="titleAutoSync" checked> Sincronizar ao cursor</label></div><label>Fonte<select id="titleFont"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Impact">Impact</option><option value="Verdana">Verdana</option><option value="Trebuchet MS">Trebuchet MS</option></select></label><label>Estilo de fonte<select id="titleStyle"><option value="">Normal</option><option value="bold">Negrito</option><option value="italic">Itálico</option><option value="bold italic">Negrito + Itálico</option></select></label><label>Posição do título<select id="titlePosition"><option value="bottom">Rodapé</option><option value="top">Topo</option><option value="center">Centro</option><option value="top-left">Topo esquerdo</option><option value="top-right">Topo direito</option><option value="bottom-left">Rodapé esquerdo</option><option value="bottom-right">Rodapé direito</option></select></label><label>Alinhamento<select id="titleAlign"><option value="center">Centro</option><option value="left">Esquerda</option><option value="right">Direita</option></select></label><button type="submit">＋ Adicionar título</button></form><div id="titles"></div></aside>
+<section class="timeline"><div class="section-head"><h2>Linha do tempo</h2><div><button id="addVideoTrack">＋ Faixa de vídeo</button><button id="addAudioTrack">＋ Faixa de áudio</button><button id="undo">Desfazer</button><button id="redo">Refazer</button><label class="inline"><input id="snapping" type="checkbox" checked> Ajustar às bordas</label></div></div><div id="tracks"></div><p class="hint">Clique para selecionar · arraste para mover · Espaço reproduz · Ctrl/⌘ Z desfaz</p></section>
 <section class="export-panel"><div><h2>Finalizar seu filme</h2><p class="muted">Processamento local em worker. Até 5 minutos e 256 MB de fontes por exportação.</p></div><button id="probe">Verificar motor</button><select id="format" aria-label="Formato de exportação" disabled></select><button id="export" class="primary" disabled>Exportar vídeo</button><button id="cancel" hidden>Cancelar</button></section>
-<details class="capabilities"><summary>Compatibilidade e diagnóstico</summary><p id="capabilities"></p><p id="engine">Motor de exportação ainda não verificado. Nenhuma mídia é enviada.</p></details><div id="status" role="status" aria-live="polite">Importe arquivos para começar.</div></main><footer>MAIA PLATFORM <span>Edição não destrutiva. Seus arquivos originais são preservados.</span></footer>`;
+<details class="capabilities"><summary>Compatibilidade e diagnóstico</summary><p id="capabilities"></p><p id="engine">Motor de exportação ainda não verificado. Nenhuma mídia é enviada.</p></details><div id="status" role="status" aria-live="polite">Importe arquivos para começar.</div></main><footer><a href="https://www.maiaplatform.org" target="_blank" rel="noopener noreferrer">MAIA PLATFORM</a> <span>Edição não destrutiva. Seus arquivos originais são preservados.</span></footer>`;
 initializeLanguage($("app"));
 let history = new History(newProject());
 const registry = new MediaRegistry();
@@ -82,6 +83,15 @@ const number = (id: string) =>
   Math.round(Number($<HTMLInputElement>(id).value) * 1e6);
 function render() {
   const p = history.project;
+  // Same bottom-to-top order the preview and export use for compositing.
+  const videoTracks = p.tracks
+    .filter((t) => t.kind === "video")
+    .sort((a, b) => a.zIndex - b.zIndex || a.id.localeCompare(b.id));
+  const audioTracks = p.tracks.filter((t) => t.kind === "audio");
+  const trackLabel = (t: Track) =>
+    t.kind === "video"
+      ? `Vídeo ${videoTracks.indexOf(t) + 1}`
+      : `Áudio ${audioTracks.indexOf(t) + 1}`;
   $("projectName").textContent = p.name;
   const end = duration(p);
   $("dirty").textContent = JSON.stringify(p) === saved ? "" : "•";
@@ -118,16 +128,9 @@ function render() {
     }
     const target = document.createElement("select");
     setAttribute(target, "aria-label", `Faixa para ${a.displayName}`);
-    const compatible = p.tracks.filter(
-      (t) => t.kind === (a.kind === "audio" ? "audio" : "video"),
-    );
-    compatible.forEach((t, i) =>
-      target.add(
-        setText(
-          new Option("", t.id),
-          `${t.kind === "audio" ? "Áudio" : "Vídeo"} ${i + 1}`,
-        ),
-      ),
+    const compatible = a.kind === "audio" ? audioTracks : videoTracks;
+    compatible.forEach((t) =>
+      target.add(setText(new Option("", t.id), trackLabel(t))),
     );
     target.hidden = compatible.length <= 1;
     row.append(
@@ -192,20 +195,42 @@ function render() {
     $("assets").append(row);
   }
   $("tracks").replaceChildren();
-  for (const track of p.tracks) {
+  // Upper rows are front layers, like common editors.
+  for (const track of [...videoTracks].reverse().concat(audioTracks)) {
     const row = document.createElement("div");
     row.className = "track";
     const name = document.createElement("div");
     name.className = "track-name";
     name.append(
-      setText(
-        document.createElement("span"),
-        track.kind === "video" ? "VÍDEO" : "ÁUDIO",
-      ),
+      setText(document.createElement("span"), trackLabel(track)),
       button(track.muted ? "Ativar som" : "Silenciar", () =>
         edit({ type: "mute", trackId: track.id, muted: !track.muted }),
       ),
     );
+    const layer = videoTracks.indexOf(track);
+    if (layer >= 0 && videoTracks.length > 1) {
+      const layerButton = (
+        text: string,
+        label: string,
+        raise?: Track,
+        below?: Track,
+      ) => {
+        const b = button(text, () =>
+          edit({ type: "raiseTrack", trackId: raise!.id, aboveId: below!.id }),
+        );
+        setAttribute(b, "aria-label", label);
+        setAttribute(b, "title", label);
+        b.disabled = !raise || !below;
+        return b;
+      };
+      const controls = document.createElement("div");
+      controls.className = "layer-buttons";
+      controls.append(
+        layerButton("↑", "Trazer para frente", track, videoTracks[layer + 1]),
+        layerButton("↓", "Enviar para trás", videoTracks[layer - 1], track),
+      );
+      name.append(controls);
+    }
     const lane = document.createElement("div");
     lane.className = "lane";
     lane.dataset.track = track.id;
@@ -214,16 +239,24 @@ function render() {
     playhead.className = "playhead";
     playhead.setAttribute("aria-hidden", "true");
     lane.append(playhead);
+    const laneTimeUs = (e: MouseEvent) => {
+      const rect = lane.getBoundingClientRect();
+      return Math.max(
+        0,
+        Math.round(((e.clientX - rect.left) / rect.width) * span),
+      );
+    };
+    lane.onclick = (e) => seekTo(laneTimeUs(e));
     for (const clip of track.clips) {
       const a = p.assets.find((a) => a.id === clip.assetId)!;
-      const b = button(
-        a.displayName,
-        () => {
-          selected = clip.id;
-          render();
-        },
-        false,
-      );
+      const b = button(a.displayName, () => {}, false);
+      b.onclick = (e) => {
+        e.stopPropagation();
+        const atUs = laneTimeUs(e);
+        selected = clip.id;
+        render();
+        seekTo(atUs);
+      };
       b.className = `clip ${track.kind} ${clip.id === selected ? "selected" : ""}`;
       b.style.left = `${(clip.startUs / span) * 100}%`;
       b.style.width = `${((clip.sourceOutUs - clip.sourceInUs) / span) * 100}%`;
@@ -238,11 +271,7 @@ function render() {
       run(() => {
         const id = e.dataTransfer?.getData("text/plain");
         if (!id || !track.clips.some((c) => c.id === id)) return;
-        const rect = lane.getBoundingClientRect();
-        let startUs = Math.max(
-          0,
-          Math.round(((e.clientX - rect.left) / rect.width) * span),
-        );
+        let startUs = laneTimeUs(e);
         if ($<HTMLInputElement>("snapping").checked)
           startUs = snap(p, startUs, id);
         edit({ type: "moveClip", id, startUs });
@@ -265,6 +294,15 @@ function render() {
       ["gain", clip.gain],
     ] as const)
       $<HTMLInputElement>(id).value = String(v);
+    const track = p.tracks.find((t) => t.clips.includes(clip))!;
+    $("chromaFields").hidden = track.kind !== "video";
+    const key = clip.chromaKey;
+    $<HTMLInputElement>("chromaOn").checked = !!key;
+    if (key) {
+      $<HTMLInputElement>("chromaColor").value = key.color;
+      $<HTMLInputElement>("chromaSimilarity").value = String(key.similarity);
+      $<HTMLInputElement>("chromaBlend").value = String(key.blend);
+    }
   }
   $("titles").replaceChildren();
   for (const t of p.titles) {
@@ -295,6 +333,10 @@ function updateTime(us: number) {
   $("time").textContent =
     `${(us / 1e6).toFixed(2)} / ${(duration(history.project) / 1e6).toFixed(2)} s`;
   setText($("play"), preview.playing ? "Pausar" : "Reproduzir");
+}
+function seekTo(us: number) {
+  preview.seek(us);
+  if ($<HTMLInputElement>("titleAutoSync").checked) syncTitleTime();
 }
 preview.onTime = updateTime;
 $("import").onclick = () => $("mediaInput").click();
@@ -358,6 +400,138 @@ $("split").onclick = () =>
   );
 $("delete").onclick = () =>
   run(() => edit({ type: "deleteClip", id: selection().id }));
+
+$("moveHere").onclick = () =>
+  run(() =>
+    edit({ type: "moveClip", id: selection().id, startUs: preview.timeUs }),
+  );
+// Trim at the playhead keeping the remaining footage at the same timeline position.
+function markIn() {
+  const clip = selection();
+  const atUs = preview.timeUs;
+  const sourceInUs = clip.sourceInUs + atUs - clip.startUs;
+  if (sourceInUs < 0 || sourceInUs >= clip.sourceOutUs)
+    throw Error(
+      "Posicione o cursor antes do fim do clipe para marcar a entrada.",
+    );
+  edit({
+    type: "trimClip",
+    id: clip.id,
+    sourceInUs,
+    sourceOutUs: clip.sourceOutUs,
+    startUs: atUs,
+  });
+  status("Entrada marcada na posição do cursor.");
+}
+function markOut() {
+  const clip = selection();
+  const asset = history.project.assets.find((a) => a.id === clip.assetId)!;
+  const sourceOutUs = clip.sourceInUs + preview.timeUs - clip.startUs;
+  if (sourceOutUs <= clip.sourceInUs || sourceOutUs > asset.durationUs)
+    throw Error(
+      "Posicione o cursor depois do início do clipe para marcar a saída.",
+    );
+  edit({
+    type: "trimClip",
+    id: clip.id,
+    sourceInUs: clip.sourceInUs,
+    sourceOutUs,
+  });
+  status("Saída marcada na posição do cursor.");
+}
+$("setIn").onclick = () => run(markIn);
+$("setOut").onclick = () => run(markOut);
+function applyChroma() {
+  const clip = selection();
+  const chromaKey = $<HTMLInputElement>("chromaOn").checked
+    ? {
+        color: $<HTMLInputElement>("chromaColor").value,
+        similarity: Number($<HTMLInputElement>("chromaSimilarity").value),
+        blend: Number($<HTMLInputElement>("chromaBlend").value),
+      }
+    : undefined;
+  if (JSON.stringify(chromaKey) === JSON.stringify(clip.chromaKey)) return;
+  edit({ type: "setChromaKey", id: clip.id, chromaKey });
+}
+for (const id of ["chromaColor", "chromaSimilarity", "chromaBlend"])
+  $(id).onchange = () => run(applyChroma);
+// Real green screens are rarely #00ff00, so guess the key from the clip itself.
+async function detectChroma() {
+  const clip = selection();
+  const end = clip.startUs + clip.sourceOutUs - clip.sourceInUs;
+  if (preview.timeUs < clip.startUs || preview.timeUs >= end)
+    seekTo(
+      clip.startUs + Math.min(500_000, Math.floor((end - clip.startUs) / 2)),
+    );
+  let color: string | undefined;
+  for (let i = 0; i < 60 && !color; i++) {
+    await new Promise((r) => setTimeout(r, 50));
+    color = preview.detectKeyColor(clip.id);
+  }
+  if (!color)
+    throw Error(
+      "Não foi possível ler o quadro do clipe. Revincule a mídia ou escolha a cor na prévia.",
+    );
+  $<HTMLInputElement>("chromaColor").value = color;
+  $<HTMLInputElement>("chromaOn").checked = true;
+  applyChroma();
+  status(`Cor do chroma key: ${color}`);
+}
+$("chromaOn").onchange = () =>
+  run(() =>
+    $<HTMLInputElement>("chromaOn").checked && !selection().chromaKey
+      ? detectChroma()
+      : applyChroma(),
+  );
+$("chromaDetect").onclick = () => run(detectChroma);
+let picking = false;
+$("chromaPick").onclick = () =>
+  run(() => {
+    selection();
+    preview.pause();
+    picking = true;
+    $("preview").classList.add("picking");
+    status("Clique na prévia sobre a cor de fundo.");
+  });
+$("preview").onclick = (e) => {
+  if (!picking) return;
+  picking = false;
+  $("preview").classList.remove("picking");
+  run(() => {
+    const canvas = $<HTMLCanvasElement>("preview");
+    const rect = canvas.getBoundingClientRect();
+    // The canvas is letterboxed with object-fit: contain.
+    const scale = Math.min(
+      rect.width / canvas.width,
+      rect.height / canvas.height,
+    );
+    const cx =
+      (e.clientX - rect.left - (rect.width - canvas.width * scale) / 2) / scale;
+    const cy =
+      (e.clientY - rect.top - (rect.height - canvas.height * scale) / 2) /
+      scale;
+    const color = preview.sampleColor(selection().id, cx, cy);
+    if (!color)
+      throw Error("Posicione o cursor sobre o clipe e clique na imagem dele.");
+    $<HTMLInputElement>("chromaColor").value = color;
+    $<HTMLInputElement>("chromaOn").checked = true;
+    applyChroma();
+    status(`Cor do chroma key: ${color}`);
+  });
+};
+$("addVideoTrack").onclick = () =>
+  run(() =>
+    edit({
+      type: "addTrack",
+      track: {
+        id: uid(),
+        kind: "video",
+        zIndex: Math.max(0, ...history.project.tracks.map((t) => t.zIndex)) + 1,
+        muted: false,
+        clips: [],
+      },
+    }),
+  );
 $("addAudioTrack").onclick = () =>
   run(() =>
     edit({
@@ -398,8 +572,10 @@ $("titleForm").onsubmit = (e) => {
           fontFamily: $<HTMLSelectElement>("titleFont").value || "Arial",
           fontWeight: styleVal.includes("bold") ? "bold" : "normal",
           fontStyle: styleVal.includes("italic") ? "italic" : "normal",
-          align: ($<HTMLSelectElement>("titleAlign").value || "center") as TitleAlign,
-          position: ($<HTMLSelectElement>("titlePosition").value || "bottom") as TitlePosition,
+          align: ($<HTMLSelectElement>("titleAlign").value ||
+            "center") as TitleAlign,
+          position: ($<HTMLSelectElement>("titlePosition").value ||
+            "bottom") as TitlePosition,
         },
       },
     });
@@ -411,7 +587,7 @@ $("play").onclick = () =>
     else await preview.play();
     updateTime(preview.timeUs);
   });
-$("rewind").onclick = () => preview.seek(0);
+$("rewind").onclick = () => seekTo(0);
 /** Sync the title start/end inputs to the current playhead position. */
 function syncTitleTime() {
   const startInput = $<HTMLInputElement>("titleStart");
@@ -420,10 +596,8 @@ function syncTitleTime() {
   endInput.value = ((preview.timeUs + 5e6) / 1e6).toFixed(3);
 }
 $("titleUseTime").onclick = () => syncTitleTime();
-$<HTMLInputElement>("scrub").oninput = () => {
-  preview.seek(Number($<HTMLInputElement>("scrub").value));
-  if ($<HTMLInputElement>("titleAutoSync").checked) syncTitleTime();
-};
+$<HTMLInputElement>("scrub").oninput = () =>
+  seekTo(Number($<HTMLInputElement>("scrub").value));
 function download(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -584,7 +758,18 @@ setText(
   `WebAssembly: ${typeof WebAssembly !== "undefined" ? "disponível" : "indisponível"} · Web Audio: ${typeof AudioContext !== "undefined" ? "disponível" : "indisponível"} · MP4 no navegador: ${document.createElement("video").canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') || "não confirmado"}. Cada arquivo é testado ao importar.`,
 );
 document.addEventListener("keydown", (e) => {
-  if ((e.target as HTMLElement).closest("input,textarea,select,button")) return;
+  const target = e.target as HTMLElement;
+  if (
+    !target.closest("input,textarea,select") &&
+    !e.ctrlKey &&
+    !e.metaKey &&
+    !e.altKey &&
+    selected
+  ) {
+    if (e.key.toLowerCase() === "i") run(markIn);
+    if (e.key.toLowerCase() === "o") run(markOut);
+  }
+  if (target.closest("input,textarea,select,button")) return;
   if (e.code === "Space") {
     e.preventDefault();
     $("play").click();
