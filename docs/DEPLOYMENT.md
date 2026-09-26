@@ -22,7 +22,25 @@ Set `CHROME_PATH` if Chrome is not at `/opt/google/chrome/chrome`. `EDITOR_URL` 
 
 ## Nginx / Maia Edge
 
-Copy the contents of `dist/` to the document root after `npm ci && npm run build`. Serve at the origin root; subdirectory hosting is not configured. Example server configuration:
+The build uses relative asset URLs and supports both `/` and `/maia-reel/`.
+For the existing Maia Edge apps host, keep `maia-edge-apps-deployment` beside this
+checkout and run:
+
+```sh
+./install.sh
+```
+
+The installer builds as the invoking user, then uses sudo only to publish
+`dist/` into `/srv/maia/apps/maia-reel/` and update the portal index/sitemap.
+It saves the previous portal files under `/var/tmp/maia-reel-portal-backup-*`.
+Other app folders are preserved. Node is needed only to build, not to serve.
+Re-run the installer to update. `PORTAL_DIR` and `WEB_DIR` can override paths.
+No Nginx reload is required because the existing apps server already serves
+`/srv/maia/apps`. Access `https://apps.maiaplatform.org/maia-reel/` (with trailing
+slash, normally redirected by Nginx). The WASM MIME type must be
+`application/wasm`; the usual `/etc/nginx/mime.types` supplies it.
+
+For a separate domain, copy the contents of `dist/` into its root. Example:
 
 ```nginx
 server {
@@ -58,3 +76,5 @@ Preview caps simultaneously active audio/video clips at eight. Thumbnail generat
 ## Release boundaries
 
 Chrome on Linux is the automated acceptance target. Safari, Firefox, mobile, HDR, arbitrary rotation metadata and VFR synchronization have not passed an acceptance matrix. Preview uses an audio clock when available and corrects element drift beyond 120 ms; this is a correction policy, not a measured guarantee. Export normalizes video to project frame rate. Performance and peak WASM memory for representative 1080p production footage still need a release benchmark.
+
+The header language selector supports English, Portuguese and Spanish. Its preference is stored locally in the browser, separately from project JSON. Rebuild and run `./install.sh` to publish interface updates; no additional server or translation endpoint is required.

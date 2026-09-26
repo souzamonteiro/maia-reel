@@ -41,8 +41,14 @@ export class Exporter {
     );
     try {
       await ff.load({
-        coreURL: new URL("/ffmpeg/ffmpeg-core.js", location.href).href,
-        wasmURL: new URL("/ffmpeg/ffmpeg-core.wasm", location.href).href,
+        coreURL: new URL(
+          `${import.meta.env.BASE_URL}ffmpeg/ffmpeg-core.js`,
+          document.baseURI,
+        ).href,
+        wasmURL: new URL(
+          `${import.meta.env.BASE_URL}ffmpeg/ffmpeg-core.wasm`,
+          document.baseURI,
+        ).href,
       });
       this.logs = [];
       await ff.exec(["-encoders"]);

@@ -59,4 +59,12 @@ Apache License 2.0; see `LICENSE`. Keep license notices and attribution for impo
 5. Save the project JSON. After reopening, select **Revincular mídias offline** and choose the original files; confirm matches by name, size, modification time, kind and duration. JSON contains editing decisions only.
 6. **Verificar motor** probes installed encoders and filters. Export MP4 (H.264/AAC) or WebM (VP8/Vorbis) only when the corresponding pair is confirmed. **Cancelar** terminates the worker. Reimport the output to review.
 
-The current UI is in Brazilian Portuguese. Output defaults to 1280×720 / 30 fps; validated projects may specify other even dimensions up to 3840×2160. Still images have a five-second source interval. No transitions, speed changes, RNNoise, chroma key, recording or subtitle generation are included yet.
+The interface supports English, Portuguese and Spanish. Use the language selector in the header; the saved preference takes priority over the browser language, with English as fallback. Switching languages preserves the current project and unfinished input. Project names, media filenames and title content are never translated. Output defaults to 1280×720 / 30 fps; validated projects may specify other even dimensions up to 3840×2160. Still images have a five-second source interval. No transitions, speed changes, RNNoise, chroma key, recording or subtitle generation are included yet.
+
+## Install in Maia Platform Apps
+
+Run `./install.sh` with `maia-edge-apps-deployment` checked out alongside this
+repository. It builds and publishes under `/srv/maia/apps/maia-reel/`, updates
+the apps portal and requests sudo only for publication. Nginx serves the app at
+`https://apps.maiaplatform.org/maia-reel/`; no server.js or Node daemon is needed.
+See [deployment instructions](docs/DEPLOYMENT.md).

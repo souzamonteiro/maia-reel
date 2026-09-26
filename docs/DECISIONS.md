@@ -18,3 +18,7 @@
 | 2026-09-24 | Use VP8/Vorbis for WebM, not the failing Opus path | Full render with libopus repeatedly trapped out-of-bounds; same graph with libvorbis passed; isolated lavfi Opus smoke alone did not reproduce | Encoder-list checks are insufficient evidence for a whole render; regression test real graph, reset worker per export, force one encoder thread |
 
 Related upstream reports: [Opus trap #591](https://github.com/ffmpegwasm/ffmpeg.wasm/issues/591) and [48 kHz Opus trap #867](https://github.com/ffmpegwasm/ffmpeg.wasm/issues/867). These are context; the codec choice is based on the local reproduction and passing Vorbis export, not an assumption that these reports prove the same root cause.
+
+| 2026-09-24 | Relative Vite asset base and FFmpeg URLs under document base | Maia Edge serves apps under /maia-reel/ | Static Nginx deployment; no Node service or new port. |
+
+- Internationalization uses a local TypeScript message catalog (English, Portuguese, Spanish) and explicit text/attribute bindings. The initial interface is bound before user content is rendered; subsequent messages register their source text. Language changes update bindings without rebuilding the editor or modifying project/history state. Preference is stored independently in `maiaReelLanguage`, with browser-language detection and English fallback. No translation service or new dependency is required.

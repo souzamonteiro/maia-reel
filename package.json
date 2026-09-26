@@ -13,7 +13,8 @@
     "fixtures": "bash scripts/fixtures.sh",
     "prepare:engine": "node scripts/prepare-engine.mjs",
     "postinstall": "npm run prepare:engine",
-    "format": "prettier --write apps packages tests scripts/*.mjs *.json *.ts index.html"
+    "format": "prettier --write apps packages tests scripts/*.mjs *.json *.ts index.html",
+    "test:deployment": "node tests/deployment.mjs"
   },
   "dependencies": {
     "@ffmpeg/core": "0.12.10",

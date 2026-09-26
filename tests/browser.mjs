@@ -8,7 +8,10 @@ const browser = await chromium.launch({
   headless: true,
   args: ["--no-sandbox", "--autoplay-policy=no-user-gesture-required"],
 });
-const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+const page = await browser.newPage({
+  locale: "pt-BR",
+  viewport: { width: 1440, height: 1000 },
+});
 const errors = [];
 const externalRequests = [];
 const editorUrl = process.env.EDITOR_URL || "http://127.0.0.1:5173";

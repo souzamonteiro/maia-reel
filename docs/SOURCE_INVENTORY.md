@@ -43,3 +43,11 @@ Timeline/title/mixer apps use canvas + MediaRecorder, with real-time capture. Co
 Export decision: install pinned `@ffmpeg/ffmpeg` 0.12.15 (MIT wrapper) and `@ffmpeg/core` 0.12.10 (GPL FFmpeg core); self-host assets, retain separate third-party notices, probe encoders/filters at runtime. Never infer codec support from file extensions or README claims.
 
 Runtime evidence for the newly implemented adapter: Chrome acceptance confirms `libx264` + `aac` and `libvpx` + `libvorbis` using actual composed outputs. The npm core's Opus path failed on the composed test; listing it as an available encoder was insufficient. See `docs/VERIFICATION.md`. Runtime checks do not establish that the older custom Maia core can be redistributed; it remains unused.
+
+## Maia Edge hosting audit — 2026-09-24
+
+Inspected `/home/roberto/projects/maia-edge-apps-deployment` at commit `7661a95c54a270e2ea8c343c90bec4b5e733cfce` (Apache-2.0): `config/nginx/client/`, `scripts/client/deploy-apps.sh`, and `portal/index.html`. The host serves `/srv/maia/apps` on the private listener 8080. Integration adds a portal entry and installs the generated static build; no application source is imported. Portal synchronization is restricted to portal-owned files so independent apps are not deleted. Browser/export evidence is recorded in VERIFICATION.md.
+
+### Internationalization reference review
+
+Reviewed `/home/roberto/projects/maia-chat/public/js/i18n.js` at `7d35b42081562f638e0284e474d3f73933a987e2` and `/home/roberto/projects/adipometer/www/js/i18n.js` at `1bcd246cb397722350fc44b03190c31a00840108` (both Apache-2.0). Reused the design of local dictionaries, browser detection and persistent selection; no source code copied. Maia Reel uses its own TypeScript catalog and bindings to preserve editor state. Verified by unit tests and the Nginx/Chrome deployment journey.

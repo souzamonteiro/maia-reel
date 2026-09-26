@@ -5,7 +5,7 @@ const browser = await chromium.launch({
   executablePath: process.env.CHROME_PATH || "/opt/google/chrome/chrome",
   args: ["--no-sandbox"],
 });
-const page = await browser.newPage();
+const page = await browser.newPage({ locale: "pt-BR" });
 page.on("dialog", (d) => d.accept());
 try {
   await page.goto(process.env.EDITOR_URL || "http://127.0.0.1:5173");

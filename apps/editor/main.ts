@@ -1,3 +1,9 @@
+import {
+  initializeLanguage,
+  setText,
+  setAttribute,
+  t,
+} from "../../packages/i18n/ui";
 import "./style.css";
 import {
   newProject,
@@ -14,13 +20,14 @@ import { Exporter, type Format } from "../../packages/export";
 const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
 $("app").innerHTML = `
-<header><a class="brand" href="/">◈ <strong>Maia Reel</strong></a><span class="badge">LOCAL · SEM UPLOAD</span><div class="project-name"><span id="projectName">Meu filme</span> <span id="dirty"></span></div><button id="open">Abrir projeto</button><button id="save">Salvar projeto</button></header>
+<header><a class="brand" href="/">◈ <strong>Maia Reel</strong></a><span class="badge">LOCAL · SEM UPLOAD</span><div class="project-name"><span id="projectName">Meu filme</span> <span id="dirty"></span></div><label>Idioma <select id="language" aria-label="Idioma"><option value="en">English</option><option value="pt">Português</option><option value="es">Español</option></select></label><button id="open">Abrir projeto</button><button id="save">Salvar projeto</button></header>
 <main><aside class="library"><div class="section-head"><h1>Mídia</h1><span id="assetCount">0 arquivos</span></div><p class="muted">Seu próximo filme começa aqui.</p><button class="primary wide" id="import">＋ Importar arquivos</button><input id="mediaInput" type="file" accept="video/*,audio/*,image/png,image/jpeg" multiple hidden><input id="projectInput" type="file" accept=".json" hidden><input id="relinkInput" type="file" multiple hidden><button id="relink" class="wide">Revincular mídias offline</button><div id="assets" class="assets"></div><p class="hint">Vídeos e imagens entram na faixa visual. Áudios têm uma faixa independente. Imagens duram 5 segundos.</p></aside>
 <section class="viewer"><div class="section-head"><h2>Prévia</h2><span id="resolution">1280 × 720 · 30 fps</span></div><div class="canvas-wrap"><canvas id="preview" width="1280" height="720" aria-label="Prévia do projeto"></canvas></div><div class="transport"><button id="rewind" aria-label="Voltar ao início">↤</button><button id="play">Reproduzir</button><output id="time">0.00 / 0.00 s</output><span class="muted">Prévia aproximada</span></div><label class="scrub-label">Posição <input id="scrub" type="range" min="0" max="0" step="1000" value="0"></label></section>
 <aside class="inspector"><h2>Clipe selecionado</h2><div id="emptySelection" class="muted">Selecione um clipe na linha do tempo para editar.</div><form id="clipForm" hidden><p id="clipName"></p><label>Posição na timeline (s)<input id="start" type="number" min="0" step="0.001" required></label><label>Entrada na fonte (s)<input id="in" type="number" min="0" step="0.001" required></label><label>Saída na fonte (s)<input id="out" type="number" min="0" step="0.001" required></label><label>Ganho (0–2)<input id="gain" type="number" min="0" max="2" step="0.05" required></label><button class="primary" type="submit">Aplicar corte</button><button type="button" id="move">Mover</button><button type="button" id="setGain">Aplicar ganho</button><button type="button" id="split">Dividir na posição</button><button type="button" id="delete">Excluir clipe</button></form><hr><h2>Título</h2><form id="titleForm"><label>Texto<textarea id="titleText" maxlength="300" rows="2" required placeholder="Uma história para contar"></textarea></label><div class="pair"><label>Início (s)<input id="titleStart" type="number" value="0" min="0" step="0.1" required></label><label>Fim (s)<input id="titleEnd" type="number" value="2" min="0" step="0.1" required></label></div><button type="submit">＋ Adicionar título</button></form><div id="titles"></div></aside>
 <section class="timeline"><div class="section-head"><h2>Linha do tempo</h2><div><button id="addAudioTrack">＋ Faixa de áudio</button><button id="undo">Desfazer</button><button id="redo">Refazer</button><label class="inline"><input id="snapping" type="checkbox" checked> Ajustar às bordas</label></div></div><div id="tracks"></div><p class="hint">Clique para selecionar · arraste para mover · Espaço reproduz · Ctrl/⌘ Z desfaz</p></section>
 <section class="export-panel"><div><h2>Finalizar seu filme</h2><p class="muted">Processamento local em worker. Até 5 minutos e 256 MB de fontes por exportação.</p></div><button id="probe">Verificar motor</button><select id="format" aria-label="Formato de exportação" disabled></select><button id="export" class="primary" disabled>Exportar vídeo</button><button id="cancel" hidden>Cancelar</button></section>
 <details class="capabilities"><summary>Compatibilidade e diagnóstico</summary><p id="capabilities"></p><p id="engine">Motor de exportação ainda não verificado. Nenhuma mídia é enviada.</p></details><div id="status" role="status" aria-live="polite">Importe arquivos para começar.</div></main><footer>MAIA PLATFORM <span>Edição não destrutiva. Seus arquivos originais são preservados.</span></footer>`;
+initializeLanguage($("app"));
 let history = new History(newProject());
 const registry = new MediaRegistry();
 let selected = "";
@@ -32,7 +39,7 @@ let visualBusy = false;
 const preview = new Preview($("preview"), () => history.project, registry);
 const exporter = new Exporter();
 const status = (message: string) => {
-  $("status").textContent = message;
+  setText($("status"), message);
   $("status").dataset.error = "false";
 };
 const error = (e: unknown) => {
@@ -49,10 +56,11 @@ const run = (fn: () => unknown) => {
     error(e);
   }
 };
-const button = (text: string, fn: () => void) => {
+const button = (text: string, fn: () => void, localized = true) => {
   const b = document.createElement("button");
   b.type = "button";
-  b.textContent = text;
+  if (localized) setText(b, text);
+  else b.textContent = text;
   b.onclick = () => run(fn);
   return b;
 };
@@ -75,7 +83,7 @@ function render() {
   $("projectName").textContent = p.name;
   const end = duration(p);
   $("dirty").textContent = JSON.stringify(p) === saved ? "" : "•";
-  $("assetCount").textContent = `${p.assets.length} arquivos`;
+  setText($("assetCount"), `${p.assets.length} arquivos`);
   const rate = p.canvas.frameRate.numerator / p.canvas.frameRate.denominator;
   $("resolution").textContent =
     `${p.canvas.width} × ${p.canvas.height} · ${rate.toFixed(2)} fps`;
@@ -83,7 +91,7 @@ function render() {
   $<HTMLButtonElement>("redo").disabled = !history.canRedo;
   $<HTMLInputElement>("scrub").max = String(end);
   if (preview.timeUs > end) preview.seek(end);
-  $("play").textContent = preview.playing ? "Pausar" : "Reproduzir";
+  setText($("play"), preview.playing ? "Pausar" : "Reproduzir");
   $("assets").replaceChildren();
   for (const a of p.assets) {
     const row = document.createElement("article");
@@ -91,22 +99,32 @@ function render() {
     const title = document.createElement("strong");
     title.textContent = a.displayName;
     const meta = document.createElement("small");
-    meta.textContent = `${a.kind} · ${(a.durationUs / 1e6).toFixed(2)} s · ${registry.entries.has(a.id) ? "online" : "OFFLINE"}`;
+    setText(
+      meta,
+      `${a.kind} · ${(a.durationUs / 1e6).toFixed(2)} s · ${registry.entries.has(a.id) ? "online" : "OFFLINE"}`,
+    );
     if (visuals.has(a.id)) {
       const img = document.createElement("img");
       img.src = visuals.get(a.id)!;
-      img.alt = a.kind === "audio" ? "Forma de onda" : "Miniatura";
+      setAttribute(
+        img,
+        "alt",
+        a.kind === "audio" ? "Forma de onda" : "Miniatura",
+      );
       img.className = "asset-visual";
       row.append(img);
     }
     const target = document.createElement("select");
-    target.setAttribute("aria-label", `Faixa para ${a.displayName}`);
+    setAttribute(target, "aria-label", `Faixa para ${a.displayName}`);
     const compatible = p.tracks.filter(
       (t) => t.kind === (a.kind === "audio" ? "audio" : "video"),
     );
     compatible.forEach((t, i) =>
       target.add(
-        new Option(`${t.kind === "audio" ? "Áudio" : "Vídeo"} ${i + 1}`, t.id),
+        setText(
+          new Option("", t.id),
+          `${t.kind === "audio" ? "Áudio" : "Vídeo"} ${i + 1}`,
+        ),
       ),
     );
     target.hidden = compatible.length <= 1;
@@ -178,7 +196,10 @@ function render() {
     const name = document.createElement("div");
     name.className = "track-name";
     name.append(
-      document.createTextNode(track.kind === "video" ? "VÍDEO" : "ÁUDIO"),
+      setText(
+        document.createElement("span"),
+        track.kind === "video" ? "VÍDEO" : "ÁUDIO",
+      ),
       button(track.muted ? "Ativar som" : "Silenciar", () =>
         edit({ type: "mute", trackId: track.id, muted: !track.muted }),
       ),
@@ -193,10 +214,14 @@ function render() {
     lane.append(playhead);
     for (const clip of track.clips) {
       const a = p.assets.find((a) => a.id === clip.assetId)!;
-      const b = button(a.displayName, () => {
-        selected = clip.id;
-        render();
-      });
+      const b = button(
+        a.displayName,
+        () => {
+          selected = clip.id;
+          render();
+        },
+        false,
+      );
       b.className = `clip ${track.kind} ${clip.id === selected ? "selected" : ""}`;
       b.style.left = `${(clip.startUs / span) * 100}%`;
       b.style.width = `${((clip.sourceOutUs - clip.sourceInUs) / span) * 100}%`;
@@ -255,7 +280,7 @@ function updateTime(us: number) {
   $<HTMLInputElement>("scrub").value = String(us);
   $("time").textContent =
     `${(us / 1e6).toFixed(2)} / ${(duration(history.project) / 1e6).toFixed(2)} s`;
-  $("play").textContent = preview.playing ? "Pausar" : "Reproduzir";
+  setText($("play"), preview.playing ? "Pausar" : "Reproduzir");
 }
 preview.onTime = updateTime;
 $("import").onclick = () => $("mediaInput").click();
@@ -388,7 +413,7 @@ $("save").onclick = () => {
 $("open").onclick = () => {
   if (
     JSON.stringify(history.project) !== saved &&
-    !confirm("Abrir outro projeto e descartar alterações não salvas?")
+    !confirm(t("Abrir outro projeto e descartar alterações não salvas?"))
   )
     return;
   $("projectInput").click();
@@ -450,7 +475,9 @@ $<HTMLInputElement>("relinkInput").onchange = () =>
         );
       if (
         !confirm(
-          `Revincular "${a.displayName}" ao arquivo selecionado? O fingerprint não é uma assinatura criptográfica.`,
+          t(
+            `Revincular "${a.displayName}" ao arquivo selecionado? O fingerprint não é uma assinatura criptográfica.`,
+          ),
         )
       )
         continue;
@@ -477,8 +504,10 @@ async function probe() {
   );
   select.disabled = false;
   $<HTMLButtonElement>("export").disabled = false;
-  $("engine").textContent =
-    `Encoders confirmados: ${exporter.formats.join(", ")}. FFmpeg WASM, execução em worker.`;
+  setText(
+    $("engine"),
+    `Encoders confirmados: ${exporter.formats.join(", ")}. FFmpeg WASM, execução em worker.`,
+  );
   status("Motor pronto.");
 }
 $("probe").onclick = () => run(probe);
@@ -496,7 +525,7 @@ $("export").onclick = () =>
         | HTMLSelectElement
         | HTMLTextAreaElement
       >("button,input,select,textarea"),
-    ].filter((el) => el.id !== "cancel");
+    ].filter((el) => el.id !== "cancel" && el.id !== "language");
     const disabled = controls.map((el) => el.disabled);
     controls.forEach((el) => (el.disabled = true));
     try {
@@ -517,8 +546,10 @@ $("cancel").onclick = () => {
   exporter.cancel();
   status("Exportação cancelada. Verifique o motor para tentar novamente.");
 };
-$("capabilities").textContent =
-  `WebAssembly: ${typeof WebAssembly !== "undefined" ? "disponível" : "indisponível"} · Web Audio: ${typeof AudioContext !== "undefined" ? "disponível" : "indisponível"} · MP4 no navegador: ${document.createElement("video").canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') || "não confirmado"}. Cada arquivo é testado ao importar.`;
+setText(
+  $("capabilities"),
+  `WebAssembly: ${typeof WebAssembly !== "undefined" ? "disponível" : "indisponível"} · Web Audio: ${typeof AudioContext !== "undefined" ? "disponível" : "indisponível"} · MP4 no navegador: ${document.createElement("video").canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') || "não confirmado"}. Cada arquivo é testado ao importar.`,
+);
 document.addEventListener("keydown", (e) => {
   if ((e.target as HTMLElement).closest("input,textarea,select,button")) return;
   if (e.code === "Space") {

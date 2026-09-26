@@ -55,3 +55,25 @@ Implemented files: `apps/editor/main.ts`, `apps/editor/style.css`; project/timel
 ## Remaining release gates
 
 Optional phase 3 Maia effect/capture/RNNoise/subtitle integrations are not implemented. Original Maia demos were inspected in source rather than runtime-tested, and public catalog enumeration was not repeated. Production deployment on an actual Maia Edge host, Firefox/Safari/mobile acceptance, VFR/rotation/HDR coverage, representative 1080p performance and peak WASM memory benchmarks, and distribution of complete corresponding FFmpeg/core dependency sources remain release work. The application is a working MVP, not a claim that all four roadmap phases are complete.
+
+## Maia Edge subdirectory deployment — 2026-09-24
+
+- `npm ci` completed with the lockfile; the first sandboxed attempt failed DNS,
+  and the network-enabled retry succeeded.
+- `npm run build`, nine unit tests and `npm run lint` passed.
+- `npm run test:deployment` starts an isolated Nginx with the apps host's
+  COOP/COEP/CORP headers and the app mounted at `/maia-reel/`. Chrome imported a
+  generated red PNG, trimmed to one second, loaded the worker/core, exported MP4
+  and decoded the result: 1280×720, 1 second, red center pixel. No page errors or
+  HTTP requests outside the app prefix occurred. WASM MIME was application/wasm.
+- The initial decoded-pixel check sampled before seeking; the acceptance check
+  now explicitly seeks to the middle of the output before reading its center.
+- Full original video/audio fixtures were not rerun: native ffmpeg is absent
+  from this host's PATH. The new deployment test requires neither ffmpeg nor
+  external media. This does not extend the existing audio/browser support claims.
+- Live publication was not performed: `sudo -n true` requires an operator
+  password. Run `./install.sh` to publish the tested build and portal.
+
+### Internationalization verification
+
+`npm run build`, `npm test` (11 passing), `npm run lint` and `npm run test:deployment` passed. The Nginx/Chrome journey verifies browser Portuguese detection, English selection surviving reload, Spanish playback labels, preservation of unsaved title/trim input and clip labels across switching, followed by successful import/export/redecode (1-second MP4, 1280×720). Unit tests verify locale fallback, matching catalog placeholders and preservation of user arguments. Existing media browser fixtures were not rerun; this test generates its own image without native FFmpeg. Production installation still requires the operator to run `./install.sh` with sudo access.
