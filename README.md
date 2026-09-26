@@ -59,7 +59,7 @@ Apache License 2.0; see `LICENSE`. Keep license notices and attribution for impo
 5. Save the project JSON. After reopening, select **Revincular mídias offline** and choose the original files; confirm matches by name, size, modification time, kind and duration. JSON contains editing decisions only.
 6. **Verificar motor** probes installed encoders and filters. Export MP4 (H.264/AAC) or WebM (VP8/Vorbis) only when the corresponding pair is confirmed. **Cancelar** terminates the worker. Reimport the output to review.
 
-The interface supports English, Portuguese and Spanish. Use the language selector in the header; the saved preference takes priority over the browser language, with English as fallback. Switching languages preserves the current project and unfinished input. Project names, media filenames and title content are never translated. Output defaults to 1280×720 / 30 fps; validated projects may specify other even dimensions up to 3840×2160. Still images have a five-second source interval. No transitions, speed changes, RNNoise, chroma key, recording or subtitle generation are included yet.
+The interface supports English, Portuguese and Spanish. Use the language selector in the header; the saved preference takes priority over the browser language, with English as fallback. Switching languages preserves the current project and unfinished input. Project names, media filenames and title content are never translated. Output defaults to 1280×720 / 30 fps; validated projects may specify other even dimensions up to 3840×2160. Still images have a five-second source interval. Optional chroma key and transitions are available. Speed changes, RNNoise, recording and subtitle generation are not included yet.
 
 ## Install in Maia Platform Apps
 
@@ -68,3 +68,13 @@ repository. It builds and publishes under `/srv/maia/apps/maia-reel/`, updates
 the apps portal and requests sudo only for publication. Nginx serves the app at
 `https://apps.maiaplatform.org/maia-reel/`; no server.js or Node daemon is needed.
 See [deployment instructions](docs/DEPLOYMENT.md).
+
+### Tools and optional transitions
+
+The library and inspector scroll independently within the preview row. The inspector has collapsible groups for trimming/position, audio, transitions, chroma key and titles. On narrow screens, the timeline follows the preview before the tools and library.
+
+To add a transition, place two clips end-to-start on the same track, select the **second** clip, and open **Transição de entrada**. Choose **Passagem por preto**, **Passagem por branco**, and/or **Fade de áudio**, set the total duration, then click **Aplicar transição**. Audio can also be faded independently on audio tracks or on a video's embedded sound. Each half of the effect fits inside its neighboring clip; timing and total project duration stay unchanged. This is a dip through a color/silence, not an overlapping crossfade. The default is no transition; **Remover transição** restores a hard cut. A diamond marks configured incoming transitions on the timeline.
+
+Transitions are saved in the project and support undo/redo. Moving or trimming in a way that breaks a configured transition is rejected with an explanation; remove or shorten it first. Deleting a connected clip removes its transition in the same undoable operation. Splitting retains transitions at the original outer boundaries without adding a fade at the new cut.
+
+Run `npm run test:transitions` for generated-image/audio browser coverage, responsive panel checks, preview sampling and actual MP4 picture/audio verification. The test starts its own local Vite server and needs Chrome, but no native FFmpeg or external footage.

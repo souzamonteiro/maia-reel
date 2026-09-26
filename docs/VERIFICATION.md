@@ -77,3 +77,17 @@ Optional phase 3 Maia effect/capture/RNNoise/subtitle integrations are not imple
 ### Internationalization verification
 
 `npm run build`, `npm test` (11 passing), `npm run lint` and `npm run test:deployment` passed. The Nginx/Chrome journey verifies browser Portuguese detection, English selection surviving reload, Spanish playback labels, preservation of unsaved title/trim input and clip labels across switching, followed by successful import/export/redecode (1-second MP4, 1280×720). Unit tests verify locale fallback, matching catalog placeholders and preservation of user arguments. Existing media browser fixtures were not rerun; this test generates its own image without native FFmpeg. Production installation still requires the operator to run `./install.sh` with sudo access.
+
+## Inspector layout and optional transitions — 2026-09-26
+
+- `npm test`: 19 tests passed, including round-trip serialization, exact undo/redo, rejection of invalid/broken transition boundaries, audio-only effects/mute, chained duration limits and splitting/deletion behavior.
+- `npm run build`, `npm run lint`, `git diff --check`: passed.
+- `npm run test:transitions`: passed in local Chrome. The test starts Vite, generates two PNG images and a 440 Hz PCM WAV, applies effects through the editor, checks language switching and undo/redo, saves JSON, samples preview pixels and Web Audio gains, exports MP4, and independently decodes picture/audio using browser decoders.
+- Layout checks at 1440×900, 1280×720, 1024×768, 800×800 and 390×844 confirm the timeline starts within the viewport; desktop inspector/preview bottoms align, panels scroll, and expanding/collapsing titles does not shift the timeline. Visually reviewed `test-results/transitions-layout.png`.
+- Both dip-to-white and dip-to-black outputs are exactly 4 seconds. At the cut their sampled RGB values are respectively `[255,255,255]` and `[0,0,0]`. Decoded RMS amplitude is about 0.1228 away from the transition, 0.0613 halfway through the fade, and 0.00145 in the 20 ms window centered on the cut (AAC and the finite measurement window prevent an exact zero measurement).
+- Additional actual preview/export checks confirm that transparent PNG pixels and chroma-key holes continue to reveal a blue lower track while the opaque foreground fades to white.
+- `npm run test:deployment`: passed the existing Nginx subdirectory, language persistence and one-second MP4 export/redecode journey. The final subsequent changes preserve transparent pixels and exact split serialization; the transition browser suite was rerun after those changes.
+
+Changed files: `apps/editor/main.ts`, `apps/editor/style.css`, `packages/project/index.ts`, `packages/timeline/index.ts`, `packages/preview/index.ts`, `packages/export/index.ts`, `packages/export/plan.ts`, `packages/i18n/catalog.ts`, `tests/project.test.ts`, `tests/transitions.mjs`, `package.json`, `README.md`, `docs/PROJECT_FORMAT.md`, `docs/DECISIONS.md`, and this report.
+
+Artifacts remain ignored in `test-results/`. No deployment or installation was performed. The original external-fixture browser suite was not rerun; the new self-contained journey covers this change. Transitions currently dip through color/silence rather than overlap sources; true crossfades, additional effects, WebM-specific transition verification and other browser engines remain outside this slice. The next transition expansion should explicitly model source handles/overlap before implementing crossfades.

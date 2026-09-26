@@ -383,14 +383,7 @@ footer a:hover {
 }
 @media (max-width: 1050px) {
   main {
-    grid-template-columns: 220px 1fr;
-  }
-  .inspector {
-    grid-column: 1/-1;
-    display: block;
-  }
-  .inspector form {
-    max-width: 500px;
+    grid-template-columns: 190px minmax(250px, 1fr) 260px;
   }
   .badge {
     display: none;
@@ -448,4 +441,119 @@ footer a:hover {
   background: #f0c799;
   z-index: 2;
   pointer-events: none;
+}
+
+/* Side panels cannot contribute intrinsic height to the preview row. */
+.library,
+.inspector {
+  min-width: 0;
+  min-height: 0;
+  contain: size;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+.viewer {
+  min-width: 0;
+  height: clamp(300px, calc(100dvh - 340px), 640px);
+  display: flex;
+  flex-direction: column;
+}
+.viewer .canvas-wrap {
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+  overflow: hidden;
+}
+.viewer canvas {
+  min-height: 0;
+}
+.assets {
+  max-height: none;
+  overflow: visible;
+}
+.tool-group {
+  border: 1px solid #343d51;
+  border-radius: 7px;
+  margin: 12px 0;
+}
+.tool-group > summary {
+  padding: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.tool-group > summary:focus-visible {
+  outline: 2px solid #a49cff;
+  outline-offset: -2px;
+}
+.tool-content {
+  padding: 4px 12px 12px;
+}
+.tool-content select {
+  width: 100%;
+  min-width: 0;
+}
+#transitionFields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+#transitionFields:disabled {
+  opacity: 0.5;
+}
+.transition-marker {
+  color: #fff0bc;
+  margin-right: 4px;
+}
+@media (min-width: 701px) and (max-width: 900px) {
+  main {
+    grid-template-columns: minmax(0, 1fr) 270px;
+  }
+  .viewer {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .inspector {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .timeline {
+    grid-row: 2;
+  }
+  .library {
+    grid-column: 1/-1;
+    grid-row: 3;
+    max-height: 300px;
+    contain: none;
+  }
+}
+@media (max-width: 700px) {
+  .viewer {
+    order: 0;
+    height: 310px;
+  }
+  .timeline {
+    order: 1;
+  }
+  .inspector {
+    order: 2;
+  }
+  .library {
+    order: 3;
+  }
+  .export-panel {
+    order: 4;
+  }
+  .capabilities {
+    order: 5;
+  }
+  #status {
+    order: 6;
+  }
+  .inspector,
+  .library {
+    contain: none;
+    max-height: 360px;
+  }
 }

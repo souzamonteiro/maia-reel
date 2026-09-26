@@ -5,6 +5,7 @@ import {
   type Asset,
   type Clip,
   type ChromaKey,
+  type Transition,
   type Title,
   type Track,
 } from "../project";
@@ -22,6 +23,7 @@ export type Command =
     }
   | { type: "splitClip"; id: string; atUs: number; newId?: string }
   | { type: "setGain"; id: string; gain: number }
+  | { type: "setTransition"; id: string; transition?: Transition }
   | { type: "setChromaKey"; id: string; chromaKey?: ChromaKey }
   | { type: "mute"; trackId: string; muted: boolean }
   | { type: "raiseTrack"; trackId: string; aboveId: string }
@@ -61,6 +63,10 @@ export function command(project: Project, cmd: Command): Project {
         c.sourceOutUs = cmd.sourceOutUs;
         if (cmd.startUs !== undefined) c.startUs = cmd.startUs;
         break;
+      case "setTransition":
+        if (cmd.transition !== undefined) c.transition = { ...cmd.transition };
+        else delete c.transition;
+        break;
       case "setGain":
         c.gain = cmd.gain;
         break;
@@ -70,17 +76,26 @@ export function command(project: Project, cmd: Command): Project {
         break;
       case "deleteClip":
         t.clips = t.clips.filter((c) => c.id !== cmd.id);
+        for (const remaining of t.clips)
+          if (remaining.transition?.previousId === cmd.id)
+            delete remaining.transition;
         break;
       case "splitClip": {
         const offset = cmd.atUs - c.startUs;
         if (offset <= 0 || offset >= c.sourceOutUs - c.sourceInUs)
           throw Error("Divida dentro do clipe.");
-        t.clips.push({
+        const newId = cmd.newId ?? uid();
+        for (const next of t.clips)
+          if (next.transition?.previousId === c.id)
+            next.transition.previousId = newId;
+        const right = {
           ...c,
-          id: cmd.newId ?? uid(),
+          id: newId,
           startUs: cmd.atUs,
           sourceInUs: c.sourceInUs + offset,
-        });
+        };
+        delete right.transition;
+        t.clips.push(right);
         c.sourceOutUs = c.sourceInUs + offset;
         break;
       }
@@ -132,12 +147,16 @@ export function evaluate(p: Project, timeUs: number) {
       .flatMap((track) =>
         track.clips
           .filter((c) => timeUs >= c.startUs && timeUs < clipEnd(c))
-          .map((clip) => ({
-            track,
-            clip,
-            sourceUs: clip.sourceInUs + timeUs - clip.startUs,
-            gain: track.muted ? 0 : clip.gain,
-          })),
+          .map((clip) => {
+            const effect = transitionAt(track, clip, timeUs);
+            return {
+              track,
+              clip,
+              sourceUs: clip.sourceInUs + timeUs - clip.startUs,
+              gain: track.muted ? 0 : clip.gain * effect.audioGain,
+              fade: effect.fade,
+            };
+          }),
       ),
     titles: p.titles.filter((t) => timeUs >= t.startUs && timeUs < t.endUs),
   };
@@ -161,4 +180,53 @@ export function snap(
       .filter((x) => Math.abs(x - timeUs) <= thresholdUs)
       .sort((a, b) => Math.abs(a - timeUs) - Math.abs(b - timeUs))[0] ?? timeUs
   );
+}
+
+/** Relative fade intervals are shared by the preview and export backends. */
+export function transitionWindows(track: Track, clip: Clip) {
+  const incoming = clip.transition;
+  const outgoing = track.clips.find(
+    (c) => c.transition?.previousId === clip.id,
+  )?.transition;
+  const length = clip.sourceOutUs - clip.sourceInUs;
+  return [
+    ...(incoming
+      ? [
+          {
+            type: "in" as const,
+            startUs: 0,
+            durationUs: incoming.durationUs / 2,
+            transition: incoming,
+          },
+        ]
+      : []),
+    ...(outgoing
+      ? [
+          {
+            type: "out" as const,
+            startUs: length - outgoing.durationUs / 2,
+            durationUs: outgoing.durationUs / 2,
+            transition: outgoing,
+          },
+        ]
+      : []),
+  ];
+}
+export function transitionAt(track: Track, clip: Clip, timeUs: number) {
+  const localUs = timeUs - clip.startUs;
+  let audioGain = 1;
+  let fade: { color: "black" | "white"; amount: number } | undefined;
+  for (const window of transitionWindows(track, clip)) {
+    if (
+      localUs < window.startUs ||
+      localUs > window.startUs + window.durationUs
+    )
+      continue;
+    const progress = (localUs - window.startUs) / window.durationUs;
+    const amount = window.type === "in" ? 1 - progress : progress;
+    if (window.transition.audio) audioGain *= 1 - amount;
+    if (window.transition.video !== "none")
+      fade = { color: window.transition.video, amount };
+  }
+  return { audioGain, fade };
 }

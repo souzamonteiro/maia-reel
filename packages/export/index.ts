@@ -123,6 +123,22 @@ export class Exporter {
         !/\bchromakey\b/.test(this.filterList)
       )
         throw Error("Filtro necessário indisponível: chromakey");
+      for (const [filter, needed] of [
+        [
+          "fade",
+          plan.segments.some((s) =>
+            s.transitions.some((w) => w.transition.video !== "none"),
+          ),
+        ],
+        [
+          "afade",
+          plan.segments.some((s) =>
+            s.transitions.some((w) => w.transition.audio),
+          ),
+        ],
+      ] as const)
+        if (needed && !new RegExp("\\b" + filter + "\\b").test(this.filterList))
+          throw Error(`Filtro necessário indisponível: ${filter}`);
       const ff = this.engine!;
       const args: string[] = [];
       const inputMap = new Map<string, number>();
@@ -162,10 +178,31 @@ export class Exporter {
       let current = "base",
         serial = 0;
       const sounds = ["[silence]"];
-      for (const { track, clip: c, asset, endUs, gain } of plan.segments) {
+      for (const {
+        track,
+        clip: c,
+        asset,
+        endUs,
+        gain,
+        transitions,
+      } of plan.segments) {
         const idx = inputMap.get(c.assetId)!;
         const n = serial++;
         const d = seconds(c.sourceOutUs - c.sourceInUs);
+        const videoFades = transitions
+          .filter((w) => w.transition.video !== "none")
+          .map(
+            (w) =>
+              `,fade=t=${w.type}:st=${seconds(w.startUs)}:d=${seconds(w.durationUs)}:color=${w.transition.video}`,
+          )
+          .join("");
+        const audioFades = transitions
+          .filter((w) => w.transition.audio)
+          .map(
+            (w) =>
+              `,afade=t=${w.type}:st=${seconds(w.startUs)}:d=${seconds(w.durationUs)}:curve=tri`,
+          )
+          .join("");
         if (track.kind === "video") {
           const k = c.chromaKey;
           // Keyed clips keep alpha, including transparent letterbox bars, like the preview.
@@ -174,7 +211,7 @@ export class Exporter {
             : "";
           const padColor = k ? ":color=black@0" : "";
           filters.push(
-            `[${idx}:v]trim=start=${seconds(c.sourceInUs)}:end=${seconds(c.sourceOutUs)},setpts=PTS-STARTPTS,scale=${w}:${h}:force_original_aspect_ratio=decrease${key},pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2${padColor},setsar=1,fps=${fps},setpts=PTS+${seconds(c.startUs)}/TB[v${n}]`,
+            `[${idx}:v]trim=start=${seconds(c.sourceInUs)}:end=${seconds(c.sourceOutUs)},setpts=PTS-STARTPTS,scale=${w}:${h}:force_original_aspect_ratio=decrease${key},pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2${padColor},setsar=1,fps=${fps}${videoFades},setpts=PTS+${seconds(c.startUs)}/TB[v${n}]`,
           );
           filters.push(
             `[${current}][v${n}]overlay=eof_action=pass:enable='gte(t,${seconds(c.startUs)})*lt(t,${seconds(endUs)})'[layer${n}]`,
@@ -183,7 +220,7 @@ export class Exporter {
         }
         if (asset.kind !== "image" && hasAudio.has(asset.id) && gain > 0) {
           filters.push(
-            `[${idx}:a]atrim=start=${seconds(c.sourceInUs)}:duration=${d},asetpts=PTS-STARTPTS,aresample=48000,volume=${gain},adelay=${Math.round((c.startUs / 1e6) * 48000)}S:all=1[a${n}]`,
+            `[${idx}:a]atrim=start=${seconds(c.sourceInUs)}:duration=${d},asetpts=PTS-STARTPTS,aresample=48000,volume=${gain}${audioFades},adelay=${Math.round((c.startUs / 1e6) * 48000)}S:all=1[a${n}]`,
           );
           sounds.push(`[a${n}]`);
         }

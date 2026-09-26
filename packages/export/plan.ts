@@ -1,5 +1,11 @@
-import { duration, validate, type Project, type Title, type TitlePosition } from "../project";
-import { clipEnd } from "../timeline";
+import {
+  duration,
+  validate,
+  type Project,
+  type Title,
+  type TitlePosition,
+} from "../project";
+import { clipEnd, transitionWindows } from "../timeline";
 
 /** Build the x/y position expressions for an FFmpeg drawtext filter. */
 function drawtextPosition(pos: TitlePosition | undefined): string {
@@ -61,6 +67,7 @@ export function createRenderPlan(project: Project) {
           track,
           clip,
           endUs: clipEnd(clip),
+          transitions: transitionWindows(track, clip),
           gain: track.muted ? 0 : clip.gain,
           asset: p.assets.find((a) => a.id === clip.assetId)!,
         })),

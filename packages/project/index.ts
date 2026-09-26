@@ -11,6 +11,13 @@ export type ChromaKey = {
   similarity: number; // 0.01–1, FFmpeg chromakey semantics
   blend: number; // 0–1
 };
+/** A dip centered on the cut, stored on the incoming clip. */
+export type Transition = {
+  previousId: string;
+  durationUs: number;
+  video: "none" | "black" | "white";
+  audio: boolean;
+};
 export type Clip = {
   id: string;
   assetId: string;
@@ -19,6 +26,7 @@ export type Clip = {
   sourceOutUs: number;
   gain: number;
   chromaKey?: ChromaKey;
+  transition?: Transition;
 };
 export type Track = {
   id: string;
@@ -220,6 +228,49 @@ export function validate(value: unknown): Project {
           "Chroma key inválido.",
         );
       }
+    }
+    for (const c of t.clips as Clip[]) {
+      const transition = c.transition;
+      if (!transition) {
+        check(transition === undefined, "Transição inválida.");
+        continue;
+      }
+      check(
+        typeof transition === "object" &&
+          typeof transition.previousId === "string" &&
+          integer(transition.durationUs, 2000, 10e6) &&
+          ["none", "black", "white"].includes(transition.video) &&
+          typeof transition.audio === "boolean" &&
+          (transition.audio || transition.video !== "none") &&
+          (t.kind === "video" || transition.video === "none"),
+        "Transição inválida.",
+      );
+      const previous = (t.clips as Clip[]).find(
+        (x) => x.id === transition.previousId,
+      );
+      check(
+        previous &&
+          previous.id !== c.id &&
+          previous.startUs + previous.sourceOutUs - previous.sourceInUs ===
+            c.startUs,
+        "A transição exige clipes contíguos na mesma faixa. Remova a transição antes de mover ou cortar.",
+      );
+      check(
+        (t.clips as Clip[]).filter(
+          (x) => x.transition?.previousId === previous.id,
+        ).length === 1,
+        "Uma saída de clipe só pode ter uma transição.",
+      );
+    }
+    for (const c of t.clips as Clip[]) {
+      const outgoing = (t.clips as Clip[]).find(
+        (x) => x.transition?.previousId === c.id,
+      )?.transition;
+      check(
+        ((c.transition?.durationUs ?? 0) + (outgoing?.durationUs ?? 0)) / 2 <=
+          c.sourceOutUs - c.sourceInUs,
+        "As transições excedem a duração do clipe. Reduza a duração ou remova a transição antes de cortar.",
+      );
     }
     if (t.kind === "video") {
       const clips = [...t.clips].sort((a, b) => a.startUs - b.startUs);

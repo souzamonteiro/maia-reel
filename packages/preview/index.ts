@@ -73,6 +73,7 @@ export class Preview {
   private anchor = 0;
   private overload = false;
   private base = 0;
+  private layerCanvas?: HTMLCanvasElement;
   private keyCanvas?: HTMLCanvasElement;
   private keyCtx?: CanvasRenderingContext2D;
   timeUs = 0;
@@ -192,6 +193,7 @@ export class Preview {
             img.naturalWidth,
             img.naturalHeight,
             item.clip.chromaKey,
+            item.fade,
           );
         continue;
       }
@@ -224,7 +226,13 @@ export class Preview {
         });
       else if (!this.playing && !el.paused) el.pause();
       if (asset.kind === "video" && el.readyState >= 2)
-        this.draw(el, el.videoWidth, el.videoHeight, item.clip.chromaKey);
+        this.draw(
+          el,
+          el.videoWidth,
+          el.videoHeight,
+          item.clip.chromaKey,
+          item.fade,
+        );
     }
     for (const t of active.titles)
       paintTitle(ctx, t, this.canvas.width, this.canvas.height);
@@ -246,26 +254,52 @@ export class Preview {
     w: number,
     h: number,
     key?: ChromaKey,
+    fade?: { color: "black" | "white"; amount: number },
   ) {
     const { dw, dh, x, y } = this.rect(w, h);
+    const layer = (this.layerCanvas ??= document.createElement("canvas"));
+    if (
+      layer.width !== this.canvas.width ||
+      layer.height !== this.canvas.height
+    ) {
+      layer.width = this.canvas.width;
+      layer.height = this.canvas.height;
+    }
+    const ctx = layer.getContext("2d")!;
+    ctx.clearRect(0, 0, layer.width, layer.height);
     if (!key) {
-      this.ctx.drawImage(source, x, y, dw, dh);
-      return;
+      ctx.fillStyle = "black";
+      // Match export's opaque letterbox without flattening transparent PNGs.
+      ctx.fillRect(0, 0, layer.width, y);
+      ctx.fillRect(0, y + dh, layer.width, layer.height - y - dh);
+      ctx.fillRect(0, y, x, dh);
+      ctx.fillRect(x + dw, y, layer.width - x - dw, dh);
+      ctx.drawImage(source, x, y, dw, dh);
+    } else {
+      const c = (this.keyCanvas ??= document.createElement("canvas"));
+      if (c.width !== dw || c.height !== dh) {
+        c.width = dw;
+        c.height = dh;
+      }
+      const k = (this.keyCtx ??= c.getContext("2d", {
+        willReadFrequently: true,
+      })!);
+      k.clearRect(0, 0, dw, dh);
+      k.drawImage(source, 0, 0, dw, dh);
+      const pixels = k.getImageData(0, 0, dw, dh);
+      applyChromaKey(pixels.data, key);
+      k.putImageData(pixels, 0, 0);
+      ctx.drawImage(c, x, y);
     }
-    const c = (this.keyCanvas ??= document.createElement("canvas"));
-    if (c.width !== dw || c.height !== dh) {
-      c.width = dw;
-      c.height = dh;
+    if (fade) {
+      ctx.save();
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.globalAlpha = fade.amount;
+      ctx.fillStyle = fade.color;
+      ctx.fillRect(0, 0, layer.width, layer.height);
+      ctx.restore();
     }
-    const k = (this.keyCtx ??= c.getContext("2d", {
-      willReadFrequently: true,
-    })!);
-    k.clearRect(0, 0, dw, dh);
-    k.drawImage(source, 0, 0, dw, dh);
-    const pixels = k.getImageData(0, 0, dw, dh);
-    applyChromaKey(pixels.data, key);
-    k.putImageData(pixels, 0, 0);
-    this.ctx.drawImage(c, x, y);
+    this.ctx.drawImage(layer, 0, 0);
   }
   private source(
     clipId: string,

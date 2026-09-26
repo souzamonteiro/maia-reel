@@ -1,5 +1,52 @@
 // Interface messages only; never translate project or media content.
 export const catalog: readonly (readonly [string, string, string])[] = [
+  [
+    "As transições excedem a duração do clipe. Reduza a duração ou remova a transição antes de cortar.",
+    "Transitions exceed the clip duration. Shorten or remove the transition before trimming.",
+    "Las transiciones exceden la duración del clip. Reduzca la duración o elimine la transición antes de recortar.",
+  ],
+  [
+    "Uma saída de clipe só pode ter uma transição.",
+    "A clip can have only one outgoing transition.",
+    "Un clip solo puede tener una transición de salida.",
+  ],
+  [
+    "A transição exige clipes contíguos na mesma faixa. Remova a transição antes de mover ou cortar.",
+    "Transitions require adjacent clips on the same track. Remove the transition before moving or trimming.",
+    "Las transiciones requieren clips contiguos en la misma pista. Elimine la transición antes de mover o recortar.",
+  ],
+  ["Transição inválida.", "Invalid transition.", "Transición no válida."],
+  [
+    "Selecione dois clipes contíguos na mesma faixa.",
+    "Select two adjacent clips on the same track.",
+    "Seleccione dos clips contiguos en la misma pista.",
+  ],
+  [
+    "Encoste este clipe no fim de outro clipe da mesma faixa para adicionar uma transição.",
+    "Place this clip at the end of another clip on the same track to add a transition.",
+    "Coloque este clip al final de otro clip de la misma pista para añadir una transición.",
+  ],
+  [
+    "Aplica entre o clipe anterior e o selecionado nesta faixa.",
+    "Applies between the previous and selected clip on this track.",
+    "Se aplica entre el clip anterior y el seleccionado en esta pista.",
+  ],
+  ["Remover transição", "Remove transition", "Eliminar transición"],
+  ["Aplicar transição", "Apply transition", "Aplicar transición"],
+  [
+    "Metade da duração em cada clipe, sem alterar os cortes.",
+    "Half the duration in each clip, preserving the cuts.",
+    "La mitad de la duración en cada clip, conservando los cortes.",
+  ],
+  ["Duração total (s)", "Total duration (s)", "Duración total (s)"],
+  ["Fade de áudio", "Audio fade", "Fundido de audio"],
+  ["Passagem por branco", "Dip to white", "Paso por blanco"],
+  ["Passagem por preto", "Dip to black", "Paso por negro"],
+  ["Sem transição", "No transition", "Sin transición"],
+  ["Transição de entrada", "Incoming transition", "Transición de entrada"],
+  ["Vídeo", "Video", "Vídeo"],
+  ["Áudio", "Audio", "Audio"],
+  ["Corte e posição", "Trim and position", "Recorte y posición"],
   ["Idioma", "Language", "Idioma"],
   [
     "Maia Reel — Editor local",

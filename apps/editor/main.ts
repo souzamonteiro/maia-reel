@@ -11,11 +11,12 @@ import {
   duration,
   uid,
   type Clip,
+  type Transition,
   type Track,
   type TitleAlign,
   type TitlePosition,
 } from "../../packages/project";
-import { History, snap, type Command } from "../../packages/timeline";
+import { History, snap, clipEnd, type Command } from "../../packages/timeline";
 import { MediaRegistry } from "../../packages/media";
 import { thumbnail, waveform } from "../../packages/media/visuals";
 import { Preview } from "../../packages/preview";
@@ -26,7 +27,10 @@ $("app").innerHTML = `
 <header><a class="brand" href="/">◈ <strong>Maia Reel</strong></a><span class="badge">LOCAL · SEM UPLOAD</span><div class="project-name"><span id="projectName">Meu filme</span> <span id="dirty"></span></div><label>Idioma <select id="language" aria-label="Idioma"><option value="en">English</option><option value="pt">Português</option><option value="es">Español</option></select></label><button id="open">Abrir projeto</button><button id="save">Salvar projeto</button></header>
 <main><aside class="library"><div class="section-head"><h1>Mídia</h1><span id="assetCount">0 arquivos</span></div><p class="muted">Seu próximo filme começa aqui.</p><button class="primary wide" id="import">＋ Importar arquivos</button><input id="mediaInput" type="file" accept="video/*,audio/*,image/png,image/jpeg" multiple hidden><input id="projectInput" type="file" accept=".json" hidden><input id="relinkInput" type="file" multiple hidden><button id="relink" class="wide">Revincular mídias offline</button><div id="assets" class="assets"></div><p class="hint">Vídeos e imagens entram na faixa visual. Áudios têm uma faixa independente. Imagens duram 5 segundos.</p></aside>
 <section class="viewer"><div class="section-head"><h2>Prévia</h2><span id="resolution">1280 × 720 · 30 fps</span></div><div class="canvas-wrap"><canvas id="preview" width="1280" height="720" aria-label="Prévia do projeto"></canvas></div><div class="transport"><button id="rewind" aria-label="Voltar ao início">↤</button><button id="play">Reproduzir</button><output id="time">0.00 / 0.00 s</output><span class="muted">Prévia aproximada</span></div><label class="scrub-label">Posição <input id="scrub" type="range" min="0" max="0" step="1000" value="0"></label></section>
-<aside class="inspector"><h2>Clipe selecionado</h2><div id="emptySelection" class="muted">Selecione um clipe na linha do tempo para editar.</div><form id="clipForm" hidden><p id="clipName"></p><label>Posição na timeline (s)<input id="start" type="number" min="0" step="0.001" required></label><div class="pair"><button type="button" id="moveHere">↤ Mover para aqui</button></div><label>Entrada na fonte (s)<input id="in" type="number" min="0" step="0.001" required></label><div class="pair"><button type="button" id="setIn">↤ Marcar entrada</button></div><label>Saída na fonte (s)<input id="out" type="number" min="0" step="0.001" required></label><div class="pair"><button type="button" id="setOut">↦ Marcar saída</button></div><label>Ganho (0–2)<input id="gain" type="number" min="0" max="2" step="0.05" required></label><div class="pair"><button class="primary" type="submit">Aplicar corte</button><button type="button" id="setGain">Aplicar ganho</button></div><div class="pair"><button type="button" id="move">Mover (posição acima)</button><button type="button" id="split">Dividir na posição</button></div><fieldset id="chromaFields" class="chroma"><legend>Chroma key</legend><label class="check"><input type="checkbox" id="chromaOn"> Ativar chroma key</label><div class="pair"><label>Cor de fundo<input id="chromaColor" type="color" value="#00ff00"></label></div><div class="pair"><button type="button" id="chromaDetect">Detectar cor</button><button type="button" id="chromaPick">Escolher na prévia</button></div><label>Similaridade<input id="chromaSimilarity" type="range" min="0.01" max="0.4" step="0.005" value="0.1"></label><label>Suavidade<input id="chromaBlend" type="range" min="0" max="0.3" step="0.005" value="0.05"></label><p class="hint">Coloque o clipe em uma faixa de vídeo acima do fundo.</p></fieldset><button type="button" id="delete">Excluir clipe</button></form><hr><h2>Título</h2><form id="titleForm"><label>Texto<textarea id="titleText" maxlength="300" rows="2" required placeholder="Uma história para contar"></textarea></label><div class="pair"><label>Início (s)<input id="titleStart" type="number" value="0" min="0" step="0.1" required></label><label>Fim (s)<input id="titleEnd" type="number" value="5" min="0" step="0.1" required></label></div><div class="pair"><button type="button" id="titleUseTime">Usar posição do cursor</button><label class="inline"><input type="checkbox" id="titleAutoSync" checked> Sincronizar ao cursor</label></div><label>Fonte<select id="titleFont"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Impact">Impact</option><option value="Verdana">Verdana</option><option value="Trebuchet MS">Trebuchet MS</option></select></label><label>Estilo de fonte<select id="titleStyle"><option value="">Normal</option><option value="bold">Negrito</option><option value="italic">Itálico</option><option value="bold italic">Negrito + Itálico</option></select></label><label>Posição do título<select id="titlePosition"><option value="bottom">Rodapé</option><option value="top">Topo</option><option value="center">Centro</option><option value="top-left">Topo esquerdo</option><option value="top-right">Topo direito</option><option value="bottom-left">Rodapé esquerdo</option><option value="bottom-right">Rodapé direito</option></select></label><label>Alinhamento<select id="titleAlign"><option value="center">Centro</option><option value="left">Esquerda</option><option value="right">Direita</option></select></label><button type="submit">＋ Adicionar título</button></form><div id="titles"></div></aside>
+<aside class="inspector"><h2>Clipe selecionado</h2><div id="emptySelection" class="muted">Selecione um clipe na linha do tempo para editar.</div><form id="clipForm" hidden><p id="clipName"></p><details class="tool-group" open><summary>Corte e posição</summary><div class="tool-content"><label>Posição na timeline (s)<input id="start" type="number" min="0" step="0.001" required></label><div class="pair"><button type="button" id="moveHere">↤ Mover para aqui</button></div><label>Entrada na fonte (s)<input id="in" type="number" min="0" step="0.001" required></label><div class="pair"><button type="button" id="setIn">↤ Marcar entrada</button></div><label>Saída na fonte (s)<input id="out" type="number" min="0" step="0.001" required></label><div class="pair"><button type="button" id="setOut">↦ Marcar saída</button></div><div class="pair"><button class="primary" type="submit">Aplicar corte</button></div><div class="pair"><button type="button" id="move">Mover (posição acima)</button><button type="button" id="split">Dividir na posição</button></div></div></details>
+<details class="tool-group" open><summary>Áudio</summary><div class="tool-content"><label>Ganho (0–2)<input id="gain" type="number" min="0" max="2" step="0.05" required></label><button type="button" id="setGain">Aplicar ganho</button></div></details>
+<details class="tool-group" id="transitionGroup" open><summary>Transição de entrada</summary><div class="tool-content"><p class="muted" id="transitionHint"></p><fieldset id="transitionFields"><label id="transitionVideoLabel">Vídeo<select id="transitionVideo"><option value="none">Sem transição</option><option value="black">Passagem por preto</option><option value="white">Passagem por branco</option></select></label><label class="check"><input id="transitionAudio" type="checkbox"> Fade de áudio</label><label>Duração total (s)<input id="transitionDuration" type="number" min="0.002" max="10" step="0.001" value="1"></label><p class="hint">Metade da duração em cada clipe, sem alterar os cortes.</p><button type="button" id="applyTransition">Aplicar transição</button></fieldset><button type="button" id="removeTransition">Remover transição</button></div></details>
+<details id="chromaFields" class="tool-group"><summary>Chroma key</summary><div class="tool-content"><label class="check"><input type="checkbox" id="chromaOn"> Ativar chroma key</label><div class="pair"><label>Cor de fundo<input id="chromaColor" type="color" value="#00ff00"></label></div><div class="pair"><button type="button" id="chromaDetect">Detectar cor</button><button type="button" id="chromaPick">Escolher na prévia</button></div><label>Similaridade<input id="chromaSimilarity" type="range" min="0.01" max="0.4" step="0.005" value="0.1"></label><label>Suavidade<input id="chromaBlend" type="range" min="0" max="0.3" step="0.005" value="0.05"></label><p class="hint">Coloque o clipe em uma faixa de vídeo acima do fundo.</p></div></details><button type="button" id="delete">Excluir clipe</button></form><details class="tool-group" id="titleGroup" open><summary>Título</summary><div class="tool-content"><form id="titleForm"><label>Texto<textarea id="titleText" maxlength="300" rows="2" required placeholder="Uma história para contar"></textarea></label><div class="pair"><label>Início (s)<input id="titleStart" type="number" value="0" min="0" step="0.1" required></label><label>Fim (s)<input id="titleEnd" type="number" value="5" min="0" step="0.1" required></label></div><div class="pair"><button type="button" id="titleUseTime">Usar posição do cursor</button><label class="inline"><input type="checkbox" id="titleAutoSync" checked> Sincronizar ao cursor</label></div><label>Fonte<select id="titleFont"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Impact">Impact</option><option value="Verdana">Verdana</option><option value="Trebuchet MS">Trebuchet MS</option></select></label><label>Estilo de fonte<select id="titleStyle"><option value="">Normal</option><option value="bold">Negrito</option><option value="italic">Itálico</option><option value="bold italic">Negrito + Itálico</option></select></label><label>Posição do título<select id="titlePosition"><option value="bottom">Rodapé</option><option value="top">Topo</option><option value="center">Centro</option><option value="top-left">Topo esquerdo</option><option value="top-right">Topo direito</option><option value="bottom-left">Rodapé esquerdo</option><option value="bottom-right">Rodapé direito</option></select></label><label>Alinhamento<select id="titleAlign"><option value="center">Centro</option><option value="left">Esquerda</option><option value="right">Direita</option></select></label><button type="submit">＋ Adicionar título</button></form><div id="titles"></div></div></details></aside>
 <section class="timeline"><div class="section-head"><h2>Linha do tempo</h2><div><button id="addVideoTrack">＋ Faixa de vídeo</button><button id="addAudioTrack">＋ Faixa de áudio</button><button id="undo">Desfazer</button><button id="redo">Refazer</button><label class="inline"><input id="snapping" type="checkbox" checked> Ajustar às bordas</label></div></div><div id="tracks"></div><p class="hint">Clique para selecionar · arraste para mover · Espaço reproduz · Ctrl/⌘ Z desfaz</p></section>
 <section class="export-panel"><div><h2>Finalizar seu filme</h2><p class="muted">Processamento local em worker. Até 5 minutos e 256 MB de fontes por exportação.</p></div><button id="probe">Verificar motor</button><select id="format" aria-label="Formato de exportação" disabled></select><button id="export" class="primary" disabled>Exportar vídeo</button><button id="cancel" hidden>Cancelar</button></section>
 <details class="capabilities"><summary>Compatibilidade e diagnóstico</summary><p id="capabilities"></p><p id="engine">Motor de exportação ainda não verificado. Nenhuma mídia é enviada.</p></details><div id="status" role="status" aria-live="polite">Importe arquivos para começar.</div></main><footer><a href="https://www.maiaplatform.org" target="_blank" rel="noopener noreferrer">MAIA PLATFORM</a> <span>Edição não destrutiva. Seus arquivos originais são preservados.</span></footer>`;
@@ -261,6 +265,14 @@ function render() {
       b.style.left = `${(clip.startUs / span) * 100}%`;
       b.style.width = `${((clip.sourceOutUs - clip.sourceInUs) / span) * 100}%`;
       b.title = `${a.displayName}: ${(clip.startUs / 1e6).toFixed(3)} s`;
+      if (clip.transition) {
+        b.classList.add("has-transition");
+        const marker = document.createElement("span");
+        marker.className = "transition-marker";
+        marker.textContent = " ◇";
+        marker.setAttribute("aria-hidden", "true");
+        b.prepend(marker);
+      }
       b.draggable = true;
       b.ondragstart = (e) => e.dataTransfer?.setData("text/plain", clip.id);
       lane.append(b);
@@ -296,6 +308,30 @@ function render() {
       $<HTMLInputElement>(id).value = String(v);
     const track = p.tracks.find((t) => t.clips.includes(clip))!;
     $("chromaFields").hidden = track.kind !== "video";
+    const previous = transitionPrevious(track, clip);
+    const transition = clip.transition;
+    $("transitionVideoLabel").hidden = track.kind !== "video";
+    $<HTMLSelectElement>("transitionVideo").value = transition?.video ?? "none";
+    $<HTMLInputElement>("transitionAudio").checked = transition?.audio ?? false;
+    $<HTMLInputElement>("transitionDuration").value = String(
+      (transition?.durationUs ??
+        Math.min(
+          1e6,
+          2 *
+            Math.min(
+              clipEnd(clip) - clip.startUs,
+              previous ? clipEnd(previous) - previous.startUs : 500000,
+            ),
+        )) / 1e6,
+    );
+    $<HTMLFieldSetElement>("transitionFields").disabled = !previous;
+    $<HTMLButtonElement>("removeTransition").disabled = !transition;
+    setText(
+      $("transitionHint"),
+      previous
+        ? "Aplica entre o clipe anterior e o selecionado nesta faixa."
+        : "Encoste este clipe no fim de outro clipe da mesma faixa para adicionar uma transição.",
+    );
     const key = clip.chromaKey;
     $<HTMLInputElement>("chromaOn").checked = !!key;
     if (key) {
@@ -382,6 +418,42 @@ $("clipForm").onsubmit = (e) => {
     }),
   );
 };
+function transitionPrevious(track: Track, clip: Clip) {
+  if (clip.transition)
+    return track.clips.find((c) => c.id === clip.transition!.previousId);
+  const candidates = track.clips.filter(
+    (c) => c.id !== clip.id && clipEnd(c) === clip.startUs,
+  );
+  return candidates.length === 1 ? candidates[0] : undefined;
+}
+$("applyTransition").onclick = () =>
+  run(() => {
+    const clip = selection();
+    const track = history.project.tracks.find((t) => t.clips.includes(clip))!;
+    const previous = transitionPrevious(track, clip);
+    if (!previous)
+      throw Error("Selecione dois clipes contíguos na mesma faixa.");
+    const video =
+      track.kind === "video"
+        ? ($<HTMLSelectElement>("transitionVideo").value as Transition["video"])
+        : "none";
+    const audio = $<HTMLInputElement>("transitionAudio").checked;
+    edit({
+      type: "setTransition",
+      id: clip.id,
+      transition:
+        video === "none" && !audio
+          ? undefined
+          : {
+              previousId: previous.id,
+              durationUs: number("transitionDuration"),
+              video,
+              audio,
+            },
+    });
+  });
+$("removeTransition").onclick = () =>
+  run(() => edit({ type: "setTransition", id: selection().id }));
 $("move").onclick = () =>
   run(() =>
     edit({ type: "moveClip", id: selection().id, startUs: number("start") }),
