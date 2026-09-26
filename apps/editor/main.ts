@@ -11,6 +11,8 @@ import {
   duration,
   uid,
   type Clip,
+  type TitleAlign,
+  type TitlePosition,
 } from "../../packages/project";
 import { History, snap, type Command } from "../../packages/timeline";
 import { MediaRegistry } from "../../packages/media";
@@ -23,7 +25,7 @@ $("app").innerHTML = `
 <header><a class="brand" href="/">◈ <strong>Maia Reel</strong></a><span class="badge">LOCAL · SEM UPLOAD</span><div class="project-name"><span id="projectName">Meu filme</span> <span id="dirty"></span></div><label>Idioma <select id="language" aria-label="Idioma"><option value="en">English</option><option value="pt">Português</option><option value="es">Español</option></select></label><button id="open">Abrir projeto</button><button id="save">Salvar projeto</button></header>
 <main><aside class="library"><div class="section-head"><h1>Mídia</h1><span id="assetCount">0 arquivos</span></div><p class="muted">Seu próximo filme começa aqui.</p><button class="primary wide" id="import">＋ Importar arquivos</button><input id="mediaInput" type="file" accept="video/*,audio/*,image/png,image/jpeg" multiple hidden><input id="projectInput" type="file" accept=".json" hidden><input id="relinkInput" type="file" multiple hidden><button id="relink" class="wide">Revincular mídias offline</button><div id="assets" class="assets"></div><p class="hint">Vídeos e imagens entram na faixa visual. Áudios têm uma faixa independente. Imagens duram 5 segundos.</p></aside>
 <section class="viewer"><div class="section-head"><h2>Prévia</h2><span id="resolution">1280 × 720 · 30 fps</span></div><div class="canvas-wrap"><canvas id="preview" width="1280" height="720" aria-label="Prévia do projeto"></canvas></div><div class="transport"><button id="rewind" aria-label="Voltar ao início">↤</button><button id="play">Reproduzir</button><output id="time">0.00 / 0.00 s</output><span class="muted">Prévia aproximada</span></div><label class="scrub-label">Posição <input id="scrub" type="range" min="0" max="0" step="1000" value="0"></label></section>
-<aside class="inspector"><h2>Clipe selecionado</h2><div id="emptySelection" class="muted">Selecione um clipe na linha do tempo para editar.</div><form id="clipForm" hidden><p id="clipName"></p><label>Posição na timeline (s)<input id="start" type="number" min="0" step="0.001" required></label><label>Entrada na fonte (s)<input id="in" type="number" min="0" step="0.001" required></label><label>Saída na fonte (s)<input id="out" type="number" min="0" step="0.001" required></label><label>Ganho (0–2)<input id="gain" type="number" min="0" max="2" step="0.05" required></label><button class="primary" type="submit">Aplicar corte</button><button type="button" id="move">Mover</button><button type="button" id="setGain">Aplicar ganho</button><button type="button" id="split">Dividir na posição</button><button type="button" id="delete">Excluir clipe</button></form><hr><h2>Título</h2><form id="titleForm"><label>Texto<textarea id="titleText" maxlength="300" rows="2" required placeholder="Uma história para contar"></textarea></label><div class="pair"><label>Início (s)<input id="titleStart" type="number" value="0" min="0" step="0.1" required></label><label>Fim (s)<input id="titleEnd" type="number" value="2" min="0" step="0.1" required></label></div><button type="submit">＋ Adicionar título</button></form><div id="titles"></div></aside>
+<aside class="inspector"><h2>Clipe selecionado</h2><div id="emptySelection" class="muted">Selecione um clipe na linha do tempo para editar.</div><form id="clipForm" hidden><p id="clipName"></p><label>Posição na timeline (s)<input id="start" type="number" min="0" step="0.001" required></label><label>Entrada na fonte (s)<input id="in" type="number" min="0" step="0.001" required></label><label>Saída na fonte (s)<input id="out" type="number" min="0" step="0.001" required></label><label>Ganho (0–2)<input id="gain" type="number" min="0" max="2" step="0.05" required></label><button class="primary" type="submit">Aplicar corte</button><button type="button" id="move">Mover</button><button type="button" id="setGain">Aplicar ganho</button><button type="button" id="split">Dividir na posição</button><button type="button" id="delete">Excluir clipe</button></form><hr><h2>Título</h2><form id="titleForm"><label>Texto<textarea id="titleText" maxlength="300" rows="2" required placeholder="Uma história para contar"></textarea></label><div class="pair"><label>Início (s)<input id="titleStart" type="number" value="0" min="0" step="0.1" required></label><label>Fim (s)<input id="titleEnd" type="number" value="5" min="0" step="0.1" required></label></div><div class="pair"><button type="button" id="titleUseTime">Usar posição do cursor</button><label class="inline"><input type="checkbox" id="titleAutoSync" checked> Sincronizar ao cursor</label></div><label>Fonte<select id="titleFont"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Impact">Impact</option><option value="Verdana">Verdana</option><option value="Trebuchet MS">Trebuchet MS</option></select></label><label>Estilo de fonte<select id="titleStyle"><option value="">Normal</option><option value="bold">Negrito</option><option value="italic">Itálico</option><option value="bold italic">Negrito + Itálico</option></select></label><label>Posição do título<select id="titlePosition"><option value="bottom">Rodapé</option><option value="top">Topo</option><option value="center">Centro</option><option value="top-left">Topo esquerdo</option><option value="top-right">Topo direito</option><option value="bottom-left">Rodapé esquerdo</option><option value="bottom-right">Rodapé direito</option></select></label><label>Alinhamento<select id="titleAlign"><option value="center">Centro</option><option value="left">Esquerda</option><option value="right">Direita</option></select></label><button type="submit">＋ Adicionar título</button></form><div id="titles"></div></aside>
 <section class="timeline"><div class="section-head"><h2>Linha do tempo</h2><div><button id="addAudioTrack">＋ Faixa de áudio</button><button id="undo">Desfazer</button><button id="redo">Refazer</button><label class="inline"><input id="snapping" type="checkbox" checked> Ajustar às bordas</label></div></div><div id="tracks"></div><p class="hint">Clique para selecionar · arraste para mover · Espaço reproduz · Ctrl/⌘ Z desfaz</p></section>
 <section class="export-panel"><div><h2>Finalizar seu filme</h2><p class="muted">Processamento local em worker. Até 5 minutos e 256 MB de fontes por exportação.</p></div><button id="probe">Verificar motor</button><select id="format" aria-label="Formato de exportação" disabled></select><button id="export" class="primary" disabled>Exportar vídeo</button><button id="cancel" hidden>Cancelar</button></section>
 <details class="capabilities"><summary>Compatibilidade e diagnóstico</summary><p id="capabilities"></p><p id="engine">Motor de exportação ainda não verificado. Nenhuma mídia é enviada.</p></details><div id="status" role="status" aria-live="polite">Importe arquivos para começar.</div></main><footer>MAIA PLATFORM <span>Edição não destrutiva. Seus arquivos originais são preservados.</span></footer>`;
@@ -266,11 +268,23 @@ function render() {
   }
   $("titles").replaceChildren();
   for (const t of p.titles) {
-    $("titles").append(
-      button(`Excluir título: ${t.text}`, () =>
-        edit({ type: "deleteTitle", id: t.id }),
-      ),
+    // Build a metadata card for each title entry.
+    const card = document.createElement("article");
+    card.className = "title-card";
+    const textEl = document.createElement("strong");
+    textEl.textContent = t.text;
+    const meta = document.createElement("small");
+    const posLabel = t.style.position ?? "bottom";
+    const alignLabel = t.style.align ?? "center";
+    const fontLabel = t.style.fontFamily ?? "Arial";
+    meta.textContent =
+      `${(t.startUs / 1e6).toFixed(2)}s – ${(t.endUs / 1e6).toFixed(2)}s` +
+      ` · ${posLabel} · ${alignLabel} · ${fontLabel}`;
+    const del = button(`Excluir título: ${t.text}`, () =>
+      edit({ type: "deleteTitle", id: t.id }),
     );
+    card.append(textEl, meta, del);
+    $("titles").append(card);
   }
   updateTime(preview.timeUs);
 }
@@ -369,7 +383,8 @@ $("redo").onclick = () => {
 };
 $("titleForm").onsubmit = (e) => {
   e.preventDefault();
-  run(() =>
+  run(() => {
+    const styleVal = $<HTMLSelectElement>("titleStyle").value;
     edit({
       type: "addTitle",
       title: {
@@ -377,10 +392,18 @@ $("titleForm").onsubmit = (e) => {
         startUs: number("titleStart"),
         endUs: number("titleEnd"),
         text: $<HTMLTextAreaElement>("titleText").value,
-        style: { fontSize: 64, color: "#ffffff" },
+        style: {
+          fontSize: 64,
+          color: "#ffffff",
+          fontFamily: $<HTMLSelectElement>("titleFont").value || "Arial",
+          fontWeight: styleVal.includes("bold") ? "bold" : "normal",
+          fontStyle: styleVal.includes("italic") ? "italic" : "normal",
+          align: ($<HTMLSelectElement>("titleAlign").value || "center") as TitleAlign,
+          position: ($<HTMLSelectElement>("titlePosition").value || "bottom") as TitlePosition,
+        },
       },
-    }),
-  );
+    });
+  });
 };
 $("play").onclick = () =>
   run(async () => {
@@ -389,8 +412,18 @@ $("play").onclick = () =>
     updateTime(preview.timeUs);
   });
 $("rewind").onclick = () => preview.seek(0);
-$<HTMLInputElement>("scrub").oninput = () =>
+/** Sync the title start/end inputs to the current playhead position. */
+function syncTitleTime() {
+  const startInput = $<HTMLInputElement>("titleStart");
+  const endInput = $<HTMLInputElement>("titleEnd");
+  startInput.value = (preview.timeUs / 1e6).toFixed(3);
+  endInput.value = ((preview.timeUs + 5e6) / 1e6).toFixed(3);
+}
+$("titleUseTime").onclick = () => syncTitleTime();
+$<HTMLInputElement>("scrub").oninput = () => {
   preview.seek(Number($<HTMLInputElement>("scrub").value));
+  if ($<HTMLInputElement>("titleAutoSync").checked) syncTitleTime();
+};
 function download(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

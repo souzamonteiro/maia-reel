@@ -21,12 +21,29 @@ export type Track = {
   muted: boolean;
   clips: Clip[];
 };
+export type TitleAlign = "left" | "center" | "right";
+export type TitlePosition =
+  | "center"
+  | "top"
+  | "bottom"
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right";
 export type Title = {
   id: string;
   startUs: number;
   endUs: number;
   text: string;
-  style: { fontSize: number; color: string };
+  style: {
+    fontSize: number; // 12–200
+    color: string; // #rrggbb
+    fontFamily?: string; // one of the allowed families, default 'Arial'
+    fontWeight?: "normal" | "bold";
+    fontStyle?: "normal" | "italic";
+    align?: TitleAlign; // default 'center'
+    position?: TitlePosition; // default 'bottom'
+  };
 };
 export type Project = {
   format: "org.maiaplatform.maiareel.project";
@@ -212,6 +229,34 @@ export function validate(value: unknown): Project {
         /^#[0-9a-f]{6}$/i.test(t.style.color),
       "Estilo inválido.",
     );
+    if (t.style.fontFamily !== undefined)
+      check(
+        typeof t.style.fontFamily === "string" && t.style.fontFamily.length <= 80,
+        "Estilo inválido.",
+      );
+    if (t.style.fontWeight !== undefined)
+      check(
+        t.style.fontWeight === "normal" || t.style.fontWeight === "bold",
+        "Estilo inválido.",
+      );
+    if (t.style.fontStyle !== undefined)
+      check(
+        t.style.fontStyle === "normal" || t.style.fontStyle === "italic",
+        "Estilo inválido.",
+      );
+    if (t.style.align !== undefined)
+      check(
+        ["left", "center", "right"].includes(t.style.align),
+        "Estilo inválido.",
+      );
+    if (t.style.position !== undefined)
+      check(
+        [
+          "center", "top", "bottom",
+          "top-left", "top-right", "bottom-left", "bottom-right",
+        ].includes(t.style.position),
+        "Estilo inválido.",
+      );
   }
   return structuredClone(p) as Project;
 }

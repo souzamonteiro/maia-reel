@@ -1,24 +1,45 @@
-import { duration, type Project, type Title } from "../project";
+import { duration, type Project, type Title, type TitlePosition } from "../project";
 import { evaluate } from "../timeline";
 import { MediaRegistry } from "../media";
+/** Map a position preset to canvas X/Y coordinates. */
+function titleXY(
+  pos: TitlePosition | undefined,
+  width: number,
+  height: number,
+): { x: number; y: number } {
+  switch (pos) {
+    case "top":        return { x: width * 0.5, y: height * 0.1 };
+    case "center":     return { x: width * 0.5, y: height * 0.5 };
+    case "top-left":   return { x: width * 0.05, y: height * 0.1 };
+    case "top-right":  return { x: width * 0.95, y: height * 0.1 };
+    case "bottom-left":  return { x: width * 0.05, y: height * 0.9 };
+    case "bottom-right": return { x: width * 0.95, y: height * 0.9 };
+    case "bottom":
+    default:           return { x: width * 0.5, y: height * 0.9 };
+  }
+}
 export function paintTitle(
   ctx: CanvasRenderingContext2D,
   t: Title,
   width: number,
   height: number,
 ) {
-  ctx.font = `bold ${t.style.fontSize}px sans-serif`;
-  ctx.textAlign = "center";
+  const family = t.style.fontFamily ?? "Arial";
+  const weight = t.style.fontWeight ?? "normal";
+  const italic = t.style.fontStyle === "italic" ? "italic " : "";
+  ctx.font = `${italic}${weight} ${t.style.fontSize}px ${family}`;
+  ctx.textAlign = t.style.align ?? "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = t.style.color;
   ctx.shadowColor = "#000";
   ctx.shadowBlur = 4;
+  const { x, y } = titleXY(t.style.position, width, height);
   const lines = t.text.split("\n");
   lines.forEach((line, i) =>
     ctx.fillText(
       line,
-      width / 2,
-      height * 0.8 + (i - (lines.length - 1) / 2) * t.style.fontSize * 1.2,
+      x,
+      y + (i - (lines.length - 1) / 2) * t.style.fontSize * 1.2,
       width * 0.9,
     ),
   );
